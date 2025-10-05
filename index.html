@@ -1232,6 +1232,11 @@
         `;
       }
       
+      // 전역 위임 리스너 중복 방지 플래그
+      if (window.__addPracticeDelegationAttached === undefined) {
+        window.__addPracticeDelegationAttached = false;
+      }
+
       function attachEventListeners() {
         // 연습 년월 변경 이벤트
         const practiceYearInput = document.getElementById('practice-year');
@@ -1279,13 +1284,30 @@
           submissionForm.addEventListener('submit', handleSubmissionSubmit);
         }
         
-        // 연습 추가 폼 이벤트 리스너 (이벤트 위임 사용)
-        document.addEventListener('submit', function(e) {
-          if (e.target && e.target.id === 'add-practice-form') {
-            e.preventDefault();
-            handleAddPracticeSubmit(e);
-          }
-        });
+        // 연습 추가 폼 이벤트 리스너 (이벤트 위임 사용, 중복 부착 방지)
+        if (!window.__addPracticeDelegationAttached) {
+          window.__addPracticeDelegationAttached = true;
+          document.addEventListener('submit', async function addPracticeDelegatedHandler(e) {
+            if (e.target && e.target.id === 'add-practice-form') {
+              e.preventDefault();
+              const formEl = e.target;
+              // 중복 제출 방지 락
+              if (formEl.dataset.submitting === 'true') {
+                return;
+              }
+              formEl.dataset.submitting = 'true';
+              try {
+                await handleAddPracticeSubmit(e);
+              } finally {
+                // 성공 시 모달이 닫히며 폼이 제거되므로 락은 자연 해제됨
+                // 실패 시에만 락 해제
+                if (document.body.contains(formEl)) {
+                  delete formEl.dataset.submitting;
+                }
+              }
+            }
+          });
+        }
         
         // 연습 추가 폼이 있는지 확인
         const addPracticeForm = document.getElementById('add-practice-form');
@@ -1692,6 +1714,9 @@
         e.preventDefault();
         
         console.log('연습 추가 폼 제출 시작');
+        // 버튼 비활성화로도 중복 제출 방지
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        if (submitBtn) submitBtn.disabled = true;
         
         const formData = {
           player_id: document.getElementById('add-practice-player').value,
@@ -1736,6 +1761,8 @@
         } catch (error) {
           console.error('연습 기록 추가 오류:', error);
           showError('추가 중 오류가 발생했습니다: ' + error.message);
+        } finally {
+          if (submitBtn) submitBtn.disabled = false;
         }
       }
       
