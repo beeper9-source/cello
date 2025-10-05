@@ -1180,7 +1180,37 @@
         }
       }
       
+      // 비밀번호 해시 검증 함수
+      async function verifyPassword(inputPassword) {
+        // 입력된 비밀번호를 SHA-256으로 해시화
+        const encoder = new TextEncoder();
+        const data = encoder.encode(inputPassword);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const inputHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        
+        // 저장된 해시값 (22331의 SHA-256 해시)
+        const storedHash = 'f869fefc282b7023335d4ef78ebee7ee63bf272be360249c59bd511de10d87be';
+        
+        return inputHash === storedHash;
+      }
+      
       async function deletePlayer(playerId) {
+        // 비밀번호 확인
+        const passwordAnswer = prompt('연주자 삭제를 위해 비밀번호를 입력하세요.\n질문: 거북코 사번\n답:');
+        
+        if (passwordAnswer === null) {
+          // 취소 버튼 클릭 시
+          return;
+        }
+        
+        // 비밀번호 해시 검증
+        const isValidPassword = await verifyPassword(passwordAnswer);
+        if (!isValidPassword) {
+          showError('비밀번호가 올바르지 않습니다.');
+          return;
+        }
+        
         if (!confirm('정말로 이 연주자를 삭제하시겠습니까?')) return;
         
         try {
