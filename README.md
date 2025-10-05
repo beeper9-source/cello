@@ -1,6 +1,6 @@
-# 월간 뒤포르 - 셀로 연습 관리 앱
+# 월간 뒤포르 - Cello 연습 관리 앱
 
-순수 HTML, CSS, JavaScript로 개발된 셀로 연습 관리 시스템입니다.
+순수 HTML, CSS, JavaScript로 개발된 Cello 연습 관리 시스템입니다.
 
 ## 🎻 주요 기능
 

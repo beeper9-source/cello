@@ -30,28 +30,6 @@
         backdrop-filter: blur(10px);
       }
       
-      .header-content {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 1.5rem;
-        flex-wrap: wrap;
-      }
-      
-      .logo {
-        width: 80px;
-        height: 80px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 3px solid rgba(255, 255, 255, 0.3);
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        flex-shrink: 0;
-      }
-      
-      .header-text {
-        text-align: left;
-      }
-      
       .header h1 {
         font-size: 2.5rem;
         margin-bottom: 0.5rem;
@@ -168,20 +146,6 @@
       }
       
       @media (max-width: 768px) {
-        .header-content {
-          flex-direction: column;
-          gap: 1rem;
-        }
-        
-        .header-text {
-          text-align: center;
-        }
-        
-        .logo {
-          width: 60px;
-          height: 60px;
-        }
-        
         .header h1 {
           font-size: 2rem;
         }
@@ -210,13 +174,8 @@
   <body>
     <header class="header">
       <div class="container">
-        <div class="header-content">
-          <img src="logo.JPG" alt="월간 뒤포르 로고" class="logo" />
-          <div class="header-text">
-            <h1>🎵 월간 뒤포르</h1>
-            <p>Cello 연습 관리 시스템</p>
-          </div>
-        </div>
+        <h1>🎵 월간 뒤포르</h1>
+        <p>Cello 연습 관리 시스템</p>
       </div>
     </header>
     
@@ -228,7 +187,6 @@
           <li class="nav-item"><a href="#songs">🎵 곡 관리</a></li>
           <li class="nav-item"><a href="#practice">✅ 연습 체크</a></li>
           <li class="nav-item"><a href="#submissions">🎯 결과 제출</a></li>
-          <li class="nav-item"><a href="#feedback">💬 개선요청</a></li>
         </ul>
       </div>
     </nav>
@@ -297,7 +255,6 @@
       let songs = [];
       let practiceRecords = [];
       let submissions = [];
-      let feedback = [];
       
       // 앱 초기화
       document.addEventListener('DOMContentLoaded', function() {
@@ -341,19 +298,17 @@
       async function loadData() {
         try {
           // 모든 데이터 병렬 로드
-          const [playersResult, songsResult, practiceResult, submissionsResult, feedbackResult] = await Promise.all([
+          const [playersResult, songsResult, practiceResult, submissionsResult] = await Promise.all([
             supabase.from('c_players').select('*').order('created_at'),
             supabase.from('c_songs').select('*').order('year', { ascending: false }).order('month', { ascending: false }),
             supabase.from('c_practice_records').select('*, c_players(nickname), c_songs(title)'),
-            supabase.from('c_submissions').select('*, c_players(nickname), c_songs(title)'),
-            supabase.from('c_feedback').select('*').order('created_at', { ascending: false })
+            supabase.from('c_submissions').select('*, c_players(nickname), c_songs(title)')
           ]);
           
           players = playersResult.data || [];
           songs = songsResult.data || [];
           practiceRecords = practiceResult.data || [];
           submissions = submissionsResult.data || [];
-          feedback = feedbackResult.data || [];
           
           renderView();
         } catch (error) {
@@ -380,9 +335,6 @@
             break;
           case 'submissions':
             container.innerHTML = renderSubmissions();
-            break;
-          case 'feedback':
-            container.innerHTML = renderFeedback();
             break;
           default:
             container.innerHTML = renderDashboard();
@@ -427,106 +379,17 @@
               </div>
             </div>
             
-            <div style="margin-top: 2rem;">
+            <div class="grid grid-2" style="margin-top: 2rem;">
               <div class="card">
-                <h3 style="text-align: center; margin-bottom: 1.5rem; color: #667eea;">등급별 연주자 현황</h3>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
-                  ${['알', '애벌래', '미들', '엑스퍼트'].map(grade => {
-                    const count = gradeStats[grade] || 0;
-                    const gradeColors = {
-                      '알': '#FFE4E1',
-                      '애벌래': '#E6F3FF', 
-                      '미들': '#F0FFF0',
-                      '엑스퍼트': '#FFF8DC'
-                    };
-                    const gradeEmojis = {
-                      '알': '🌱',
-                      '애벌래': '🐛',
-                      '미들': '🦋',
-                      '엑스퍼트': '🏆'
-                    };
-                    const percentage = totalPlayers > 0 ? Math.round((count / totalPlayers) * 100) : 0;
-                    
-                    return `
-                      <div style="background: ${gradeColors[grade]}; padding: 1.5rem; border-radius: 12px; text-align: center; border: 2px solid rgba(102, 126, 234, 0.2);">
-                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">${gradeEmojis[grade]}</div>
-                        <h4 style="margin: 0; color: #667eea; font-size: 1.2rem;">${grade}</h4>
-                        <div style="font-size: 2rem; font-weight: bold; color: #333; margin: 0.5rem 0;">${count}</div>
-                        <div style="font-size: 0.9rem; color: #666;">명 (${percentage}%)</div>
-                        <div style="background: rgba(102, 126, 234, 0.2); height: 8px; border-radius: 4px; margin-top: 0.5rem; overflow: hidden;">
-                          <div style="background: #667eea; height: 100%; width: ${percentage}%; transition: width 0.3s ease;"></div>
-                        </div>
-                      </div>
-                    `;
-                  }).join('')}
-                </div>
+                <h3>등급별 연주자 현황</h3>
+                ${Object.entries(gradeStats).map(([grade, count]) => `
+                  <p>${grade}: ${count}명</p>
+                `).join('')}
               </div>
-              
-              <div class="card" style="margin-top: 1.5rem;">
-                <h3 style="text-align: center; margin-bottom: 1.5rem; color: #667eea;">📈 최근 활동</h3>
-                
-                <div style="display: flex; flex-direction: column; gap: 1rem;">
-                  <div style="background: rgba(102, 126, 234, 0.05); padding: 1rem; border-radius: 8px; border: 1px solid rgba(102, 126, 234, 0.1);">
-                    <h4 style="margin: 0 0 0.75rem 0; color: #333; font-size: 1rem;">🎵 최근 연습 기록</h4>
-                    ${practiceRecords.length > 0 ? 
-                      practiceRecords
-                        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-                        .slice(0, 5)
-                        .map(record => {
-                          const date = new Date(record.created_at);
-                          const dateStr = date.toLocaleDateString('ko-KR');
-                          const timeStr = date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
-                          
-                          return `
-                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid rgba(0,0,0,0.1);">
-                              <div>
-                                <span style="font-weight: 500; color: #333;">${record.c_players?.nickname || 'Unknown'}</span>
-                                <span style="color: #666; margin: 0 0.5rem;">-</span>
-                                <span style="color: #333;">${record.c_songs?.title || 'Unknown'}</span>
-                                <span style="margin-left: 0.5rem; padding: 0.25rem 0.5rem; background: ${record.practiced ? 'rgba(0, 255, 0, 0.2)' : 'rgba(255, 0, 0, 0.2)'}; border-radius: 4px; font-size: 0.8rem;">
-                                  ${record.practiced ? '✅ 완료' : '⭕ 미완료'}
-                                </span>
-                              </div>
-                              <div style="font-size: 0.85rem; color: #666; text-align: right;">
-                                <div>${dateStr}</div>
-                                <div>${timeStr}</div>
-                              </div>
-                            </div>
-                          `;
-                        }).join('') : 
-                      '<div style="text-align: center; padding: 2rem; color: #999; font-style: italic;">연습 기록이 없습니다</div>'
-                    }
-                  </div>
-                  
-                  <div style="background: rgba(107, 255, 107, 0.05); padding: 1rem; border-radius: 8px; border: 1px solid rgba(107, 255, 107, 0.1);">
-                    <h4 style="margin: 0 0 0.75rem 0; color: #333; font-size: 1rem;">📤 최근 결과 제출</h4>
-                    ${submissions.length > 0 ? 
-                      submissions
-                        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-                        .slice(0, 3)
-                        .map(submission => {
-                          const date = new Date(submission.created_at);
-                          const dateStr = date.toLocaleDateString('ko-KR');
-                          const timeStr = date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
-                          
-                          return `
-                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid rgba(0,0,0,0.1);">
-                              <div>
-                                <span style="font-weight: 500; color: #333;">${submission.c_players?.nickname || 'Unknown'}</span>
-                                <span style="color: #666; margin: 0 0.5rem;">-</span>
-                                <span style="color: #333;">${submission.c_songs?.title || 'Unknown'}</span>
-                              </div>
-                              <div style="font-size: 0.85rem; color: #666; text-align: right;">
-                                <div>${dateStr}</div>
-                                <div>${timeStr}</div>
-                              </div>
-                            </div>
-                          `;
-                        }).join('') : 
-                      '<div style="text-align: center; padding: 2rem; color: #999; font-style: italic;">제출된 결과가 없습니다</div>'
-                    }
-                  </div>
-                </div>
+              <div class="card">
+                <h3>최근 활동</h3>
+                <p>최근 연습 기록: ${practiceRecords.length > 0 ? practiceRecords.slice(-3).map(record => 
+                  `${record.c_players?.nickname || 'Unknown'}: ${record.c_songs?.title || 'Unknown'}`).join(', ') : '없음'}</p>
               </div>
             </div>
           </div>
@@ -534,82 +397,25 @@
       }
       
       function renderPlayers() {
-        // 등급별로 연주자 그룹화
-        const gradeGroups = {
-          '알': players.filter(p => p.grade === '알'),
-          '애벌래': players.filter(p => p.grade === '애벌래'),
-          '미들': players.filter(p => p.grade === '미들'),
-          '엑스퍼트': players.filter(p => p.grade === '엑스퍼트')
-        };
-        
-        const gradeColors = {
-          '알': '#FFE4E1', // 연한 핑크
-          '애벌래': '#E6F3FF', // 연한 블루
-          '미들': '#F0FFF0', // 연한 그린
-          '엑스퍼트': '#FFF8DC' // 연한 옐로우
-        };
-        
-        const gradeEmojis = {
-          '알': '🌱',
-          '애벌래': '🐛',
-          '미들': '🦋',
-          '엑스퍼트': '🏆'
-        };
-
         return `
           <div class="card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-              <h2>👥 연주자 관리</h2>
-              <button onclick="showAddPlayerForm()" class="btn" style="background: rgba(102, 126, 234, 0.3); padding: 0.75rem 1.5rem; font-weight: bold;">
-                + 연주자 추가
-              </button>
-            </div>
+            <h2>👥 연주자 관리</h2>
+            <button onclick="showAddPlayerForm()" class="btn" style="margin-bottom: 1rem;">연주자 추가</button>
             
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
-              ${['알', '애벌래', '미들', '엑스퍼트'].map(grade => {
-                const gradePlayers = gradeGroups[grade] || [];
-                return `
-                <div class="card" style="background: ${gradeColors[grade]}; border: 2px solid rgba(102, 126, 234, 0.2); border-radius: 12px; padding: 1.5rem;">
-                  <div style="text-align: center; margin-bottom: 1.5rem;">
-                    <h3 style="color: #667eea; margin: 0; font-size: 1.5rem;">
-                      ${gradeEmojis[grade]} ${grade}
-                    </h3>
-                    <p style="color: #666; margin: 0.5rem 0 0 0; font-size: 0.9rem;">
-                      ${gradePlayers.length}명의 연주자
-                    </p>
+            <div id="players-list">
+              ${players.map(player => `
+                <div class="card" style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+                  <div>
+                    <h3>${player.nickname}</h3>
+                    <p>등급: ${player.grade}</p>
+                    <small>등록일: ${new Date(player.created_at).toLocaleDateString()}</small>
                   </div>
-                  
-                  <div style="display: flex; flex-direction: column; gap: 1rem;">
-                    ${gradePlayers.length > 0 ? gradePlayers.map(player => `
-                      <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: rgba(255, 255, 255, 0.7); border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                        <div>
-                          <h4 style="margin: 0; color: #333; font-size: 1.1rem;">${player.nickname}</h4>
-                          <p style="margin: 0.25rem 0 0 0; color: #666; font-size: 0.85rem;">
-                            등록일: ${new Date(player.created_at).toLocaleDateString()}
-                          </p>
-                        </div>
-                        <div style="display: flex; gap: 0.5rem;">
-                          <button onclick="editPlayer('${player.id}')" 
-                                  class="btn" 
-                                  style="padding: 0.5rem 0.75rem; background: rgba(102, 126, 234, 0.2); font-size: 0.8rem; border-radius: 6px;">
-                            ✏️
-                          </button>
-                          <button onclick="deletePlayer('${player.id}')" 
-                                  class="btn" 
-                                  style="padding: 0.5rem 0.75rem; background: rgba(255, 0, 0, 0.2); font-size: 0.8rem; border-radius: 6px;">
-                            🗑️
-                          </button>
-                        </div>
-                      </div>
-                    `).join('') : `
-                      <div style="text-align: center; padding: 2rem; color: #999; font-style: italic;">
-                        해당 등급의 연주자가 없습니다
-                      </div>
-                    `}
+                  <div>
+                    <button onclick="editPlayer('${player.id}')" class="btn" style="margin-right: 0.5rem; padding: 0.5rem 1rem;">수정</button>
+                    <button onclick="deletePlayer('${player.id}')" class="btn" style="background: rgba(255, 0, 0, 0.3); padding: 0.5rem 1rem;">삭제</button>
                   </div>
                 </div>
-              `;
-              }).join('')}
+              `).join('')}
             </div>
           </div>
           
@@ -648,64 +454,17 @@
             
             <div id="songs-list">
               ${songs.map(song => `
-                <div class="card" style="margin-bottom: 1.5rem; padding: 1.5rem; border-radius: 12px; border: 2px solid rgba(102, 126, 234, 0.1);">
-                  <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                    <div style="flex: 1;">
-                      <h3 style="margin: 0 0 0.5rem 0; color: #333; font-size: 1.3rem;">${song.title}</h3>
-                      <p style="margin: 0 0 0.25rem 0; color: #666;"><strong>작곡가:</strong> ${song.composer}</p>
-                      <p style="margin: 0 0 1rem 0; color: #666;"><strong>등급:</strong> ${song.grade} | <strong>기간:</strong> ${song.year}년 ${song.month}월</p>
-                      
-                      <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                        ${song.accompaniment_url ? `
-                          <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem; background: rgba(255, 107, 107, 0.1); border-radius: 8px; border: 1px solid rgba(255, 107, 107, 0.2);">
-                            <span style="font-size: 1.2rem;">🎵</span>
-                            <div>
-                              <div style="font-size: 0.85rem; color: #666; margin-bottom: 0.25rem;">반주 링크</div>
-                              <a href="${song.accompaniment_url}" target="_blank" 
-                                 style="color: #667eea; text-decoration: none; font-weight: 500; font-size: 0.9rem; word-break: break-all;">
-                                ${song.accompaniment_url.length > 50 ? song.accompaniment_url.substring(0, 50) + '...' : song.accompaniment_url}
-                              </a>
-                            </div>
-                          </div>
-                        ` : `
-                          <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem; background: rgba(200, 200, 200, 0.1); border-radius: 8px; border: 1px solid rgba(200, 200, 200, 0.2);">
-                            <span style="font-size: 1.2rem;">🎵</span>
-                            <div style="color: #999; font-size: 0.9rem;">반주 링크 없음</div>
-                          </div>
-                        `}
-                        
-                        ${song.sheet_music_url ? `
-                          <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem; background: rgba(107, 255, 107, 0.1); border-radius: 8px; border: 1px solid rgba(107, 255, 107, 0.2);">
-                            <span style="font-size: 1.2rem;">📄</span>
-                            <div>
-                              <div style="font-size: 0.85rem; color: #666; margin-bottom: 0.25rem;">악보 링크</div>
-                              <a href="${song.sheet_music_url}" target="_blank" 
-                                 style="color: #667eea; text-decoration: none; font-weight: 500; font-size: 0.9rem; word-break: break-all;">
-                                ${song.sheet_music_url.length > 50 ? song.sheet_music_url.substring(0, 50) + '...' : song.sheet_music_url}
-                              </a>
-                            </div>
-                          </div>
-                        ` : `
-                          <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem; background: rgba(200, 200, 200, 0.1); border-radius: 8px; border: 1px solid rgba(200, 200, 200, 0.2);">
-                            <span style="font-size: 1.2rem;">📄</span>
-                            <div style="color: #999; font-size: 0.9rem;">악보 링크 없음</div>
-                          </div>
-                        `}
-                      </div>
-                    </div>
-                    
-                    <div style="display: flex; gap: 0.5rem; margin-left: 1rem;">
-                      <button onclick="editSong('${song.id}')" 
-                              class="btn" 
-                              style="padding: 0.75rem 1rem; background: rgba(102, 126, 234, 0.2); border-radius: 8px; font-size: 0.9rem;">
-                        ✏️ 수정
-                      </button>
-                      <button onclick="deleteSong('${song.id}')" 
-                              class="btn" 
-                              style="padding: 0.75rem 1rem; background: rgba(255, 107, 107, 0.2); border-radius: 8px; font-size: 0.9rem;">
-                        🗑️ 삭제
-                      </button>
-                    </div>
+                <div class="card" style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+                  <div>
+                    <h3>${song.title}</h3>
+                    <p>작곡가: ${song.composer}</p>
+                    <p>등급: ${song.grade} | ${song.year}년 ${song.month}월</p>
+                    ${song.accompaniment_url ? `<p><strong>반주:</strong> <a href="${song.accompaniment_url}" target="_blank" style="color: #667eea;">🔊 반주 듣기</a></p>` : ''}
+                    ${song.sheet_music_url ? `<p><strong>악보:</strong> <a href="${song.sheet_music_url}" target="_blank" style="color: #667eea;">📄 악보 보기</a></p>` : ''}
+                  </div>
+                  <div>
+                    <button onclick="editSong('${song.id}')" class="btn" style="margin-right: 0.5rem; padding: 0.5rem 1rem;">수정</button>
+                    <button onclick="deleteSong('${song.id}')" class="btn" style="background: rgba(255, 0, 0, 0.3); padding: 0.5rem 1rem;">삭제</button>
                   </div>
                 </div>
               `).join('')}
@@ -743,23 +502,15 @@
                     ${Array.from({length: 12}, (_, i) => `<option value="${i+1}" ${i+1 === new Date().getMonth() + 1 ? 'selected' : ''}>${i+1}월</option>`).join('')}
                   </select>
                 </div>
-                <div style="margin-bottom: 1.5rem; padding: 1rem; background: rgba(255, 107, 107, 0.05); border-radius: 8px; border: 1px solid rgba(255, 107, 107, 0.1);">
-                  <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: 500; color: #333;">
-                    🎵 반주 링크 (선택사항)
-                  </label>
-                  <input type="url" id="song-accompaniment-url" placeholder="https://youtube.com/watch?v=..." style="width: 100%; padding: 0.75rem; margin-top: 0.5rem; border: 1px solid #ddd; border-radius: 6px; font-size: 0.9rem;">
-                  <small style="color: #666; font-size: 0.8rem; display: block; margin-top: 0.25rem;">
-                    💡 YouTube, SoundCloud, Spotify 등의 반주 링크를 입력하세요
-                  </small>
+                <div style="margin-bottom: 1rem;">
+                  <label>반주 링크 (선택사항):</label>
+                  <input type="url" id="song-accompaniment-url" placeholder="https://youtube.com/watch?v=..." style="width: 100%; padding: 0.5rem; margin-top: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+                  <small style="color: #666; font-size: 0.8rem;">YouTube, SoundCloud 등의 반주 링크를 입력하세요</small>
                 </div>
-                <div style="margin-bottom: 1.5rem; padding: 1rem; background: rgba(107, 255, 107, 0.05); border-radius: 8px; border: 1px solid rgba(107, 255, 107, 0.1);">
-                  <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: 500; color: #333;">
-                    📄 악보 링크 (선택사항)
-                  </label>
-                  <input type="url" id="song-sheet-music-url" placeholder="https://example.com/sheet.pdf" style="width: 100%; padding: 0.75rem; margin-top: 0.5rem; border: 1px solid #ddd; border-radius: 6px; font-size: 0.9rem;">
-                  <small style="color: #666; font-size: 0.8rem; display: block; margin-top: 0.25rem;">
-                    💡 PDF, 이미지, Google Drive 등의 악보 링크를 입력하세요
-                  </small>
+                <div style="margin-bottom: 1rem;">
+                  <label>악보 링크 (선택사항):</label>
+                  <input type="url" id="song-sheet-music-url" placeholder="https://example.com/sheet.pdf" style="width: 100%; padding: 0.5rem; margin-top: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+                  <small style="color: #666; font-size: 0.8rem;">PDF, 이미지 등의 악보 링크를 입력하세요</small>
                 </div>
                 <div style="display: flex; gap: 1rem; margin-top: 1rem;">
                   <button type="submit" class="btn" style="flex: 1; background: #667eea; color: white; border: none; padding: 0.75rem 1rem; border-radius: 4px; cursor: pointer;">저장</button>
@@ -930,85 +681,29 @@
                       const song = songs.find(s => s.id === record.song_id);
                       if (!player || !song) return '';
                       
-                      const notes = record.notes || '';
-                      
                       return `
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin: 0.5rem 0; padding: 0.5rem; background: rgba(255,255,255,0.05); border-radius: 4px; font-size: 0.9rem;">
-                          <div style="flex: 1;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin: 0.5rem 0; padding: 0.5rem; background: rgba(255,255,255,0.05); border-radius: 4px; font-size: 0.9rem;">
+                          <div>
                             <div><strong>${song.title}</strong></div>
                             <div style="opacity: 0.7; font-size: 0.8rem;">${player.nickname}</div>
-                            ${notes ? `<div style="opacity: 0.6; font-size: 0.7rem; margin-top: 0.25rem;">📝 ${notes}</div>` : ''}
                           </div>
-                          <div style="display: flex; gap: 0.25rem; align-items: center;">
-                            <button onclick="togglePractice('${player.id}', '${song.id}', '${dayData.dateStr}', ${!record.practiced})" 
-                                    class="btn" 
-                                    style="padding: 0.25rem 0.5rem; background: ${record.practiced ? 'rgba(0, 255, 0, 0.3)' : 'rgba(255, 255, 255, 0.1)'}; font-size: 0.8rem;">
-                              ${record.practiced ? '✅' : '⭕'}
-                            </button>
-                            <button onclick="deletePracticeRecord('${record.id}')" 
-                                    class="btn" 
-                                    style="padding: 0.25rem 0.5rem; background: rgba(255, 0, 0, 0.3); font-size: 0.8rem; color: white;">
-                              🗑️
-                            </button>
-                          </div>
+                          <button onclick="togglePractice('${player.id}', '${song.id}', '${dayData.dateStr}', ${!record.practiced})" 
+                                  class="btn" 
+                                  style="padding: 0.25rem 0.5rem; background: ${record.practiced ? 'rgba(0, 255, 0, 0.3)' : 'rgba(255, 255, 255, 0.1)'}; font-size: 0.8rem;">
+                            ${record.practiced ? '✅' : '⭕'}
+                          </button>
                         </div>
                       `;
                     }).join('')}
                   </div>
-                  <div style="border-top: 1px solid rgba(255,255,255,0.1); margin-top: 1rem; padding-top: 1rem;">
-                    <div style="text-align: center;">
-                      <button onclick="showAddPracticeModal('${dayData.dateStr}')" 
-                              class="btn" 
-                              style="padding: 0.5rem 1rem; background: rgba(102, 126, 234, 0.3); font-size: 0.8rem;">
-                        + 추가 연습 기록
-                      </button>
-                    </div>
-                  </div>
                 ` : `
-                  <div style="padding: 1rem;">
-                    <div style="text-align: center; margin-bottom: 1rem; opacity: 0.5;">
-                      <p>연습 기록 없음</p>
-                    </div>
-                    <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                      ${players.map(player => {
-                        // 현재 선택된 년월의 곡만 필터링
-                        const year = parseInt(document.getElementById('practice-year')?.value || new Date().getFullYear());
-                        const month = parseInt(document.getElementById('practice-month')?.value || (new Date().getMonth() + 1));
-                        const playerSongs = songs.filter(song => 
-                          song.grade === player.grade && 
-                          song.month === month && 
-                          song.year === year
-                        );
-                        return `
-                          <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; background: rgba(255,255,255,0.05); border-radius: 4px;">
-                            <span style="font-size: 0.9rem;">${player.nickname} (${player.grade})</span>
-                            <div style="display: flex; gap: 0.25rem;">
-                              ${playerSongs.slice(0, 3).map(song => `
-                                <button onclick="quickAddPractice('${player.id}', '${song.id}', '${dayData.dateStr}')" 
-                                        class="btn" 
-                                        style="padding: 0.25rem 0.5rem; background: rgba(255, 255, 255, 0.1); font-size: 0.7rem; white-space: nowrap;">
-                                  ${song.title.length > 8 ? song.title.substring(0, 8) + '...' : song.title}
-                                </button>
-                              `).join('')}
-                              ${playerSongs.length > 3 ? `
-                                <button onclick="showAddPracticeModalForPlayer('${player.id}', '${dayData.dateStr}')" 
-                                        class="btn" 
-                                        style="padding: 0.25rem 0.5rem; background: rgba(102, 126, 234, 0.3); font-size: 0.7rem;">
-                                  +${playerSongs.length - 3}
-                                </button>
-                              ` : ''}
-                            </div>
-                          </div>
-                        `;
-                      }).join('')}
-                    </div>
-                    <div style="text-align: center; margin-top: 1rem;">
-                      <button onclick="showAddPracticeModal('${dayData.dateStr}')" 
-                              class="btn" 
-                              style="padding: 0.5rem 1rem; background: rgba(102, 126, 234, 0.3); font-size: 0.8rem;">
-                        + 전체 연습 추가
-                      </button>
-                    </div>
+                  <div style="text-align: center; padding: 1rem; opacity: 0.5;">
+                    <p>연습 기록 없음</p>
+                    <button onclick="showAddPracticeModal('${dayData.dateStr}')" 
+                            class="btn" 
+                            style="padding: 0.5rem 1rem; background: rgba(255, 255, 255, 0.1); font-size: 0.8rem;">
+                      + 연습 추가
+                    </button>
                   </div>
                 `}
               </div>
@@ -1038,10 +733,6 @@
                     <option value="true">✅ 완료</option>
                     <option value="false">⭕ 미완료</option>
                   </select>
-                </div>
-                <div style="margin-bottom: 1rem;">
-                  <label>메모 (선택사항):</label>
-                  <textarea id="add-practice-notes" rows="2" placeholder="연습 내용이나 특이사항을 기록하세요" style="width: 100%; padding: 0.5rem; margin-top: 0.5rem; border: 1px solid #ccc; border-radius: 4px; resize: vertical;"></textarea>
                 </div>
                 <div style="display: flex; gap: 1rem; margin-top: 1rem;">
                   <button type="submit" class="btn" style="flex: 1; background: #667eea; color: white; border: none; padding: 0.75rem 1rem; border-radius: 4px; cursor: pointer;">추가</button>
@@ -1108,14 +799,6 @@
           console.log('연습 추가 폼 이벤트 리스너 연결됨');
         } else {
           console.log('연습 추가 폼을 찾을 수 없음');
-        }
-        
-        // 개선요청 폼 이벤트 리스너
-        const feedbackForm = document.getElementById('feedback-form');
-        if (feedbackForm) {
-          feedbackForm.removeEventListener('submit', handleFeedbackSubmit);
-          feedbackForm.addEventListener('submit', handleFeedbackSubmit);
-          console.log('개선요청 폼 이벤트 리스너 연결됨');
         }
       }
       
@@ -1427,25 +1110,6 @@
         form.dataset.practiceDate = dateStr;
         form.reset();
         
-        // 현재 선택된 년월 가져오기
-        const year = parseInt(document.getElementById('practice-year')?.value || new Date().getFullYear());
-        const month = parseInt(document.getElementById('practice-month')?.value || (new Date().getMonth() + 1));
-        
-        // 해당 월의 곡만 필터링
-        const monthSongs = songs.filter(song => song.month === month && song.year === year);
-        
-        // 곡 선택 드롭다운 업데이트
-        const songSelect = document.getElementById('add-practice-song');
-        if (songSelect) {
-          songSelect.innerHTML = monthSongs.map(song => 
-            `<option value="${song.id}">${song.title} - ${song.composer} (${song.grade})</option>`
-          ).join('');
-          
-          if (monthSongs.length === 0) {
-            songSelect.innerHTML = '<option value="">해당 월의 곡이 없습니다</option>';
-          }
-        }
-        
         // 현재 필터된 연주자가 있으면 자동 선택
         const selectedPlayerId = document.getElementById('practice-player-filter')?.value;
         if (selectedPlayerId) {
@@ -1474,15 +1138,14 @@
           player_id: document.getElementById('add-practice-player').value,
           song_id: document.getElementById('add-practice-song').value,
           practice_date: document.getElementById('add-practice-form').dataset.practiceDate,
-          practiced: document.getElementById('add-practice-status').value === 'true',
-          notes: document.getElementById('add-practice-notes').value || null
+          practiced: document.getElementById('add-practice-status').value === 'true'
         };
         
         console.log('폼 데이터:', formData);
         
         // 필수 필드 검증
         if (!formData.player_id || !formData.song_id || !formData.practice_date) {
-          showError('연주자, 곡, 날짜를 모두 선택해주세요.');
+          showError('모든 필드를 입력해주세요.');
           return;
         }
         
@@ -1504,98 +1167,6 @@
         } catch (error) {
           console.error('연습 기록 추가 오류:', error);
           showError('추가 중 오류가 발생했습니다: ' + error.message);
-        }
-      }
-      
-      // 빠른 연습 추가 함수
-      async function quickAddPractice(playerId, songId, dateStr) {
-        try {
-          const { error } = await supabase
-            .from('c_practice_records')
-            .insert([{
-              player_id: playerId,
-              song_id: songId,
-              practice_date: dateStr,
-              practiced: true // 기본적으로 완료로 설정
-            }]);
-            
-          if (error) throw error;
-          
-          showSuccess('연습 기록이 추가되었습니다.');
-          loadData();
-        } catch (error) {
-          console.error('빠른 연습 추가 오류:', error);
-          showError('연습 추가 중 오류가 발생했습니다: ' + error.message);
-        }
-      }
-      
-      // 특정 연주자용 연습 추가 모달
-      function showAddPracticeModalForPlayer(playerId, dateStr) {
-        const modal = document.getElementById('add-practice-modal');
-        const form = document.getElementById('add-practice-form');
-        const title = document.getElementById('add-practice-title');
-        
-        if (!modal || !form || !title) {
-          console.error('모달 요소를 찾을 수 없습니다');
-          showError('모달을 열 수 없습니다. 페이지를 새로고침해주세요.');
-          return;
-        }
-        
-        title.textContent = `${dateStr} 연습 기록 추가`;
-        form.dataset.practiceDate = dateStr;
-        form.reset();
-        
-        // 현재 선택된 년월 가져오기
-        const year = parseInt(document.getElementById('practice-year')?.value || new Date().getFullYear());
-        const month = parseInt(document.getElementById('practice-month')?.value || (new Date().getMonth() + 1));
-        
-        // 특정 연주자의 등급에 맞는 곡만 필터링
-        const player = players.find(p => p.id === playerId);
-        const playerSongs = songs.filter(song => 
-          song.month === month && 
-          song.year === year && 
-          song.grade === player?.grade
-        );
-        
-        // 곡 선택 드롭다운 업데이트
-        const songSelect = document.getElementById('add-practice-song');
-        if (songSelect) {
-          songSelect.innerHTML = playerSongs.map(song => 
-            `<option value="${song.id}">${song.title} - ${song.composer} (${song.grade})</option>`
-          ).join('');
-          
-          if (playerSongs.length === 0) {
-            songSelect.innerHTML = '<option value="">해당 월의 곡이 없습니다</option>';
-          }
-        }
-        
-        // 특정 연주자 자동 선택
-        const playerSelect = document.getElementById('add-practice-player');
-        if (playerSelect) {
-          playerSelect.value = playerId;
-        }
-        
-        modal.style.display = 'block';
-        console.log('특정 연주자용 모달 표시됨');
-      }
-      
-      // 연습 기록 삭제 함수
-      async function deletePracticeRecord(recordId) {
-        if (!confirm('정말로 이 연습 기록을 삭제하시겠습니까?')) return;
-        
-        try {
-          const { error } = await supabase
-            .from('c_practice_records')
-            .delete()
-            .eq('id', recordId);
-            
-          if (error) throw error;
-          
-          showSuccess('연습 기록이 삭제되었습니다.');
-          loadData();
-        } catch (error) {
-          console.error('연습 기록 삭제 오류:', error);
-          showError('삭제 중 오류가 발생했습니다: ' + error.message);
         }
       }
       
@@ -1628,178 +1199,6 @@
         setTimeout(() => {
           notification.remove();
         }, 3000);
-      }
-      
-      // 개선요청 게시판 렌더링 함수
-      function renderFeedback() {
-        return `
-          <div class="card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-              <h2>💬 개선요청 게시판</h2>
-              <button onclick="showAddFeedbackForm()" class="btn" style="background: rgba(102, 126, 234, 0.3); padding: 0.75rem 1.5rem; font-weight: bold;">
-                + 새 요청 작성
-              </button>
-            </div>
-            
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 1.5rem;">
-              ${feedback.length > 0 ? feedback.map(item => {
-                const statusColors = {
-                  'pending': 'rgba(255, 193, 7, 0.2)',
-                  'in_progress': 'rgba(33, 150, 243, 0.2)',
-                  'completed': 'rgba(76, 175, 80, 0.2)',
-                  'rejected': 'rgba(244, 67, 54, 0.2)'
-                };
-                const statusTexts = {
-                  'pending': '대기중',
-                  'in_progress': '진행중',
-                  'completed': '완료',
-                  'rejected': '거부'
-                };
-                const priorityColors = {
-                  'low': 'rgba(158, 158, 158, 0.2)',
-                  'medium': 'rgba(255, 152, 0, 0.2)',
-                  'high': 'rgba(255, 87, 34, 0.2)',
-                  'urgent': 'rgba(244, 67, 54, 0.2)'
-                };
-                const priorityTexts = {
-                  'low': '낮음',
-                  'medium': '보통',
-                  'high': '높음',
-                  'urgent': '긴급'
-                };
-                const categoryTexts = {
-                  'ui': 'UI/UX',
-                  'functionality': '기능',
-                  'performance': '성능',
-                  'bug': '버그',
-                  'feature': '새 기능',
-                  'general': '일반'
-                };
-                
-                return `
-                  <div class="card" style="border: 2px solid rgba(102, 126, 234, 0.1); border-radius: 12px; padding: 1.5rem;">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
-                      <h3 style="margin: 0; color: #333; font-size: 1.2rem; flex: 1; margin-right: 1rem;">${item.title}</h3>
-                      <div style="display: flex; gap: 0.5rem;">
-                        <span style="padding: 0.25rem 0.5rem; background: ${statusColors[item.status]}; border-radius: 4px; font-size: 0.8rem; color: #333;">
-                          ${statusTexts[item.status]}
-                        </span>
-                        <span style="padding: 0.25rem 0.5rem; background: ${priorityColors[item.priority]}; border-radius: 4px; font-size: 0.8rem; color: #333;">
-                          ${priorityTexts[item.priority]}
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <div style="margin-bottom: 1rem;">
-                      <p style="margin: 0; color: #666; line-height: 1.5;">${item.content}</p>
-                    </div>
-                    
-                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; color: #999;">
-                      <div>
-                        <span style="margin-right: 1rem;">👤 ${item.author_name}</span>
-                        <span style="padding: 0.2rem 0.5rem; background: rgba(102, 126, 234, 0.1); border-radius: 4px;">
-                          ${categoryTexts[item.category]}
-                        </span>
-                      </div>
-                      <div>${new Date(item.created_at).toLocaleDateString('ko-KR')}</div>
-                    </div>
-                  </div>
-                `;
-              }).join('') : `
-                <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: #999; font-style: italic;">
-                  아직 개선요청이 없습니다. 첫 번째 요청을 작성해보세요!
-                </div>
-              `}
-            </div>
-          </div>
-          
-          <div id="feedback-form-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
-            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; color: black; padding: 2rem; border-radius: 8px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;">
-              <h3 id="feedback-form-title">개선요청 작성</h3>
-              <form id="feedback-form">
-                <div style="margin-bottom: 1rem;">
-                  <label>제목:</label>
-                  <input type="text" id="feedback-title" required style="width: 100%; padding: 0.5rem; margin-top: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
-                </div>
-                <div style="margin-bottom: 1rem;">
-                  <label>카테고리:</label>
-                  <select id="feedback-category" required style="width: 100%; padding: 0.5rem; margin-top: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
-                    <option value="general">일반</option>
-                    <option value="ui">UI/UX</option>
-                    <option value="functionality">기능</option>
-                    <option value="performance">성능</option>
-                    <option value="bug">버그</option>
-                    <option value="feature">새 기능</option>
-                  </select>
-                </div>
-                <div style="margin-bottom: 1rem;">
-                  <label>우선순위:</label>
-                  <select id="feedback-priority" required style="width: 100%; padding: 0.5rem; margin-top: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
-                    <option value="medium">보통</option>
-                    <option value="low">낮음</option>
-                    <option value="high">높음</option>
-                    <option value="urgent">긴급</option>
-                  </select>
-                </div>
-                <div style="margin-bottom: 1rem;">
-                  <label>작성자 이름:</label>
-                  <input type="text" id="feedback-author" required style="width: 100%; padding: 0.5rem; margin-top: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
-                </div>
-                <div style="margin-bottom: 1rem;">
-                  <label>이메일 (선택사항):</label>
-                  <input type="email" id="feedback-email" style="width: 100%; padding: 0.5rem; margin-top: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
-                </div>
-                <div style="margin-bottom: 1rem;">
-                  <label>내용:</label>
-                  <textarea id="feedback-content" required rows="6" style="width: 100%; padding: 0.5rem; margin-top: 0.5rem; border: 1px solid #ccc; border-radius: 4px; resize: vertical;"></textarea>
-                </div>
-                <div style="display: flex; gap: 1rem; margin-top: 1rem;">
-                  <button type="submit" class="btn" style="flex: 1; background: #667eea; color: white; border: none; padding: 0.75rem 1rem; border-radius: 4px; cursor: pointer;">제출</button>
-                  <button type="button" onclick="closeFeedbackForm()" class="btn" style="flex: 1; background: #6c757d; color: white; border: none; padding: 0.75rem 1rem; border-radius: 4px; cursor: pointer;">취소</button>
-                </div>
-              </form>
-            </div>
-          </div>
-        `;
-      }
-      
-      // 개선요청 관련 함수들
-      function showAddFeedbackForm() {
-        document.getElementById('feedback-form-title').textContent = '개선요청 작성';
-        document.getElementById('feedback-form').reset();
-        document.getElementById('feedback-form-modal').style.display = 'block';
-      }
-      
-      function closeFeedbackForm() {
-        document.getElementById('feedback-form-modal').style.display = 'none';
-      }
-      
-      async function handleFeedbackSubmit(e) {
-        e.preventDefault();
-        
-        const formData = {
-          title: document.getElementById('feedback-title').value,
-          content: document.getElementById('feedback-content').value,
-          author_name: document.getElementById('feedback-author').value,
-          author_email: document.getElementById('feedback-email').value || null,
-          category: document.getElementById('feedback-category').value,
-          priority: document.getElementById('feedback-priority').value
-        };
-        
-        try {
-          const { error } = await supabase
-            .from('c_feedback')
-            .insert([formData]);
-            
-          if (error) throw error;
-          
-          showSuccess('개선요청이 제출되었습니다.');
-          closeFeedbackForm();
-          loadData();
-        } catch (error) {
-          console.error('개선요청 제출 오류:', error);
-          showError('제출 중 오류가 발생했습니다: ' + error.message);
-        }
       }
     </script>
   </body>

@@ -1,4 +1,4 @@
--- 월간 뒤포르 셀로 연습 관리 앱 데이터베이스 스키마
+-- 월간 뒤포르 Cello 연습 관리 앱 데이터베이스 스키마
 
 -- 연주자 관리 테이블
 CREATE TABLE IF NOT EXISTS c_players (
