@@ -533,6 +533,48 @@
         `;
       }
       
+      // 월별 연습횟수 계산 함수
+      function getMonthlyPracticeCount(playerId, year, month) {
+        return practiceRecords.filter(record => {
+          if (record.player_id !== playerId) return false;
+          
+          const recordDate = new Date(record.practice_date);
+          const recordYear = recordDate.getFullYear();
+          const recordMonth = recordDate.getMonth() + 1;
+          
+          return recordYear === year && recordMonth === month;
+        }).length;
+      }
+      
+      // 최근 3개월 연습횟수 계산 함수
+      function getRecentPracticeStats(playerId) {
+        const currentDate = new Date();
+        const currentYear = currentDate.getFullYear();
+        const currentMonth = currentDate.getMonth() + 1;
+        
+        const stats = [];
+        
+        for (let i = 2; i >= 0; i--) {
+          let year = currentYear;
+          let month = currentMonth - i;
+          
+          if (month <= 0) {
+            month += 12;
+            year -= 1;
+          }
+          
+          const count = getMonthlyPracticeCount(playerId, year, month);
+          stats.push({
+            year: year,
+            month: month,
+            count: count,
+            display: `${year}년 ${month}월`
+          });
+        }
+        
+        return stats;
+      }
+
       function renderPlayers() {
         // 등급별로 연주자 그룹화
         const gradeGroups = {
@@ -580,28 +622,50 @@
                   </div>
                   
                   <div style="display: flex; flex-direction: column; gap: 1rem;">
-                    ${gradePlayers.length > 0 ? gradePlayers.map(player => `
-                      <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: rgba(255, 255, 255, 0.7); border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                  <div>
-                          <h4 style="margin: 0; color: #333; font-size: 1.1rem;">${player.nickname}</h4>
-                          <p style="margin: 0.25rem 0 0 0; color: #666; font-size: 0.85rem;">
-                            등록일: ${new Date(player.created_at).toLocaleDateString()}
-                          </p>
-                  </div>
-                        <div style="display: flex; gap: 0.5rem;">
-                          <button onclick="editPlayer('${player.id}')" 
-                                  class="btn" 
-                                  style="padding: 0.5rem 0.75rem; background: rgba(102, 126, 234, 0.2); font-size: 0.8rem; border-radius: 6px;">
-                            ✏️
-                          </button>
-                          <button onclick="deletePlayer('${player.id}')" 
-                                  class="btn" 
-                                  style="padding: 0.5rem 0.75rem; background: rgba(255, 0, 0, 0.2); font-size: 0.8rem; border-radius: 6px;">
-                            🗑️
-                          </button>
-                </div>
+                    ${gradePlayers.length > 0 ? gradePlayers.map(player => {
+                      const practiceStats = getRecentPracticeStats(player.id);
+                      const totalPractices = practiceStats.reduce((sum, stat) => sum + stat.count, 0);
+                      
+                      return `
+                      <div style="padding: 1rem; background: rgba(255, 255, 255, 0.7); border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+                          <div style="flex: 1;">
+                            <h4 style="margin: 0; color: #333; font-size: 1.1rem;">${player.nickname}</h4>
+                            <p style="margin: 0.25rem 0 0 0; color: #666; font-size: 0.85rem;">
+                              등록일: ${new Date(player.created_at).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <div style="display: flex; gap: 0.5rem;">
+                            <button onclick="editPlayer('${player.id}')" 
+                                    class="btn" 
+                                    style="padding: 0.5rem 0.75rem; background: rgba(102, 126, 234, 0.2); font-size: 0.8rem; border-radius: 6px;">
+                              ✏️
+                            </button>
+                            <button onclick="deletePlayer('${player.id}')" 
+                                    class="btn" 
+                                    style="padding: 0.5rem 0.75rem; background: rgba(255, 0, 0, 0.2); font-size: 0.8rem; border-radius: 6px;">
+                              🗑️
+                            </button>
+                          </div>
+                        </div>
+                        
+                        <div style="background: rgba(102, 126, 234, 0.1); border-radius: 6px; padding: 0.75rem; margin-top: 0.75rem;">
+                          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                            <span style="color: #667eea; font-weight: bold; font-size: 0.9rem;">📊 최근 3개월 연습횟수</span>
+                            <span style="color: #333; font-weight: bold; font-size: 0.9rem;">총 ${totalPractices}회</span>
+                          </div>
+                          <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
+                            ${practiceStats.map(stat => `
+                              <div style="text-align: center; flex: 1;">
+                                <div style="color: #666; margin-bottom: 0.25rem;">${stat.month}월</div>
+                                <div style="color: #333; font-weight: bold; font-size: 1.1rem;">${stat.count}회</div>
+                              </div>
+                            `).join('')}
+                          </div>
+                        </div>
                       </div>
-                    `).join('') : `
+                    `;
+                    }).join('') : `
                       <div style="text-align: center; padding: 2rem; color: #999; font-style: italic;">
                         해당 등급의 연주자가 없습니다
                       </div>
@@ -866,6 +930,38 @@
         `;
       }
       
+      // 2025년 공휴일 데이터
+      const holidays2025 = [
+        '2025-01-01', // 신정
+        '2025-01-28', '2025-01-29', '2025-01-30', // 설날 연휴
+        '2025-03-01', // 삼일절
+        '2025-05-05', // 어린이날
+        '2025-05-12', // 부처님오신날
+        '2025-06-06', // 현충일
+        '2025-08-15', // 광복절
+        '2025-09-16', '2025-09-17', '2025-09-18', // 추석 연휴
+        '2025-10-03', // 개천절
+        '2025-10-06', '2025-10-07', '2025-10-08', // 추가 연휴
+        '2025-10-09', // 한글날
+        '2025-12-25'  // 크리스마스
+      ];
+      
+      function isHoliday(dateStr) {
+        return holidays2025.includes(dateStr);
+      }
+      
+      function getWeekday(dateStr) {
+        const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+        const date = new Date(dateStr);
+        return weekdays[date.getDay()];
+      }
+      
+      function isWeekend(dateStr) {
+        const date = new Date(dateStr);
+        const day = date.getDay();
+        return day === 0 || day === 6; // 일요일(0) 또는 토요일(6)
+      }
+
       function generatePracticeCalendar() {
         const year = parseInt(document.getElementById('practice-year')?.value || new Date().getFullYear());
         const month = parseInt(document.getElementById('practice-month')?.value || (new Date().getMonth() + 1));
@@ -899,11 +995,17 @@
         for (let day = 1; day <= daysInMonth; day++) {
           const dateStr = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
           const dayRecords = dateGroups[dateStr] || [];
+          const weekday = getWeekday(dateStr);
+          const isHolidayDay = isHoliday(dateStr);
+          const isWeekendDay = isWeekend(dateStr);
           
           calendarDays.push({
             day: day,
             dateStr: dateStr,
-            records: dayRecords
+            records: dayRecords,
+            weekday: weekday,
+            isHoliday: isHolidayDay,
+            isWeekend: isWeekendDay
           });
         }
         
@@ -919,8 +1021,8 @@
           <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem;">
             ${calendarDays.map(dayData => `
               <div class="card" style="min-height: 200px;">
-                <h4 style="margin-bottom: 1rem; color: #667eea; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 0.5rem;">
-                  ${dayData.day}일 (${dayData.records.length}개)
+                <h4 style="margin-bottom: 1rem; color: ${dayData.isHoliday || dayData.isWeekend ? '#ff4757' : '#667eea'}; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 0.5rem;">
+                  ${dayData.day}일 (${dayData.weekday}) ${dayData.isHoliday ? '🏮' : ''} ${dayData.isWeekend && !dayData.isHoliday ? '📅' : ''} (${dayData.records.length}개)
                 </h4>
                 
                 ${dayData.records.length > 0 ? `
