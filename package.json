@@ -1,0 +1,27 @@
+{
+  "name": "monthly-dufort",
+  "version": "1.0.0",
+  "description": "월간 뒤포르 - 셀로 연습 관리 앱 (순수 HTML)",
+  "main": "index.html",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0 --port 3001",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0 --port 3001",
+    "serve": "vite preview --host 0.0.0.0 --port 3001"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/beeper9-source/cello.git"
+  },
+  "keywords": ["cello", "practice", "management", "html", "supabase"],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/beeper9-source/cello/issues"
+  },
+  "homepage": "https://github.com/beeper9-source/cello#readme",
+  "dependencies": {},
+  "devDependencies": {
+    "vite": "^7.1.9"
+  }
+}

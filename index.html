@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#667eea" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="월간 뒤포르" />
+    <meta name="description" content="셀로 연습 관리 앱 - 연주자 관리, 곡 지정, 연습 체크, 결과 제출" />
+    <title>월간 뒤포르 - 셀로 연습 관리</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        min-height: 100vh;
+      }
+      
+      .header {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 2rem 0;
+        text-align: center;
+        backdrop-filter: blur(10px);
+      }
+      
+      .header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+        font-weight: 700;
+      }
+      
+      .header p {
+        font-size: 1.1rem;
+        opacity: 0.9;
+      }
+      
+      .nav {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 1rem 0;
+        backdrop-filter: blur(10px);
+      }
+      
+      .nav-list {
+        display: flex;
+        justify-content: center;
+        list-style: none;
+        gap: 2rem;
+        flex-wrap: wrap;
+      }
+      
+      .nav-item a {
+        color: white;
+        text-decoration: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.1);
+        transition: all 0.2s ease;
+        display: block;
+        min-width: 44px;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .nav-item a:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+      
+      .main-content {
+        padding: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+      
+      .card {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      }
+      
+      .card h2 {
+        font-size: 1.8rem;
+        margin-bottom: 1rem;
+      }
+      
+      .btn {
+        display: inline-block;
+        padding: 1rem 2rem;
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        border: none;
+        cursor: pointer;
+        min-height: 44px;
+        min-width: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: translateY(-2px);
+      }
+      
+      .grid {
+        display: grid;
+        gap: 1.5rem;
+        margin-top: 2rem;
+      }
+      
+      .grid-2 {
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      }
+      
+      .grid-4 {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      }
+      
+      .status-card {
+        text-align: center;
+        padding: 1.5rem;
+      }
+      
+      .status-card h3 {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+      }
+      
+      .status-card p {
+        opacity: 0.8;
+      }
+      
+      @media (max-width: 768px) {
+        .header h1 {
+          font-size: 2rem;
+        }
+        
+        .nav-list {
+          flex-direction: column;
+          gap: 0.5rem;
+          padding: 0 1rem;
+        }
+        
+        .nav-item a {
+          width: 100%;
+        }
+        
+        .main-content {
+          padding: 1rem;
+        }
+        
+        .grid-2,
+        .grid-4 {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="header">
+      <div class="container">
+        <h1>🎵 월간 뒤포르</h1>
+        <p>셀로 연습 관리 시스템</p>
+      </div>
+    </header>
+    
+    <nav class="nav">
+      <div class="container">
+        <ul class="nav-list">
+          <li class="nav-item"><a href="#dashboard">📊 대시보드</a></li>
+          <li class="nav-item"><a href="#players">👥 연주자 관리</a></li>
+          <li class="nav-item"><a href="#songs">🎵 곡 관리</a></li>
+          <li class="nav-item"><a href="#practice">✅ 연습 체크</a></li>
+          <li class="nav-item"><a href="#submissions">🎯 결과 제출</a></li>
+        </ul>
+      </div>
+    </nav>
+    
+    <main class="main-content">
+      <div class="card">
+        <h2>환영합니다! 🎻</h2>
+        <p>월간 뒤포르 셀로 연습 관리 앱에 오신 것을 환영합니다. 아래 기능들을 사용하여 연습을 체계적으로 관리해보세요.</p>
+        
+        <div class="grid grid-2">
+          <div class="card status-card">
+            <h3>👥</h3>
+            <h4>연주자 관리</h4>
+            <p>닉네임과 등급별로 연주자를 관리하세요</p>
+            <a href="#players" class="btn">연주자 관리</a>
+          </div>
+          
+          <div class="card status-card">
+            <h3>🎵</h3>
+            <h4>곡 관리</h4>
+            <p>매월 등급별로 연습곡을 지정하세요</p>
+            <a href="#songs" class="btn">곡 관리</a>
+          </div>
+          
+          <div class="card status-card">
+            <h3>✅</h3>
+            <h4>연습 체크</h4>
+            <p>일별 연습 기록을 체크하고 관리하세요</p>
+            <a href="#practice" class="btn">연습 체크</a>
+          </div>
+          
+          <div class="card status-card">
+            <h3>🎯</h3>
+            <h4>결과 제출</h4>
+            <p>연습 결과를 URL로 제출하고 공유하세요</p>
+            <a href="#submissions" class="btn">결과 제출</a>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card">
+        <h2>📱 모바일 최적화</h2>
+        <p>이 앱은 모바일 기기에서도 완벽하게 작동하도록 최적화되었습니다.</p>
+        <ul style="margin: 1rem 0; padding-left: 2rem;">
+          <li>터치 친화적 인터페이스</li>
+          <li>반응형 디자인</li>
+          <li>모바일 브라우저 최적화</li>
+          <li>빠른 로딩 속도</li>
+        </ul>
+      </div>
+    </main>
+    
+    <!-- Supabase 클라이언트 라이브러리 -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    
+    <script>
+      // Supabase 설정
+      const SUPABASE_URL = 'https://dmgtwzbvpualecnrcyug.supabase.co';
+      const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRtZ3R3emJ2cHVhbGVjbnJjeXVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxMzAzODUsImV4cCI6MjA3MjcwNjM4NX0.Cddfcij0GL3lLCZz51tALcyKULfGECyq4YNpjVh9Uf4';
+      
+      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      
+      // 전역 상태
+      let currentView = 'dashboard';
+      let players = [];
+      let songs = [];
+      let practiceRecords = [];
+      let submissions = [];
+      
+      // 앱 초기화
+      document.addEventListener('DOMContentLoaded', function() {
+        initializeApp();
+        setupNavigation();
+        loadData();
+      });
+      
+      function initializeApp() {
+        // 메인 컨텐츠 영역을 동적으로 생성할 컨테이너로 교체
+        const mainContent = document.querySelector('.main-content');
+        mainContent.innerHTML = `
+          <div id="content-container">
+            <div class="card">
+              <h2>로딩 중...</h2>
+              <p>데이터를 불러오는 중입니다...</p>
+            </div>
+          </div>
+        `;
+      }
+      
+      function setupNavigation() {
+        const navLinks = document.querySelectorAll('.nav-item a');
+        
+        navLinks.forEach(link => {
+          link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const target = this.getAttribute('href').substring(1);
+            
+            // 네비게이션 활성화 상태 업데이트
+            navLinks.forEach(l => l.style.background = 'rgba(255, 255, 255, 0.1)');
+            this.style.background = 'rgba(255, 255, 255, 0.3)';
+            
+            // 뷰 전환
+            currentView = target;
+            renderView();
+          });
+        });
+      }
+      
+      async function loadData() {
+        try {
+          // 모든 데이터 병렬 로드
+          const [playersResult, songsResult, practiceResult, submissionsResult] = await Promise.all([
+            supabase.from('c_players').select('*').order('created_at'),
+            supabase.from('c_songs').select('*').order('year', { ascending: false }).order('month', { ascending: false }),
+            supabase.from('c_practice_records').select('*, c_players(nickname), c_songs(title)'),
+            supabase.from('c_submissions').select('*, c_players(nickname), c_songs(title)')
+          ]);
+          
+          players = playersResult.data || [];
+          songs = songsResult.data || [];
+          practiceRecords = practiceResult.data || [];
+          submissions = submissionsResult.data || [];
+          
+          renderView();
+        } catch (error) {
+          console.error('데이터 로드 오류:', error);
+          showError('데이터를 불러오는 중 오류가 발생했습니다.');
+        }
+      }
+      
+      function renderView() {
+        const container = document.getElementById('content-container');
+        
+        switch(currentView) {
+          case 'dashboard':
+            container.innerHTML = renderDashboard();
+            break;
+          case 'players':
+            container.innerHTML = renderPlayers();
+            break;
+          case 'songs':
+            container.innerHTML = renderSongs();
+            break;
+          case 'practice':
+            container.innerHTML = renderPractice();
+            break;
+          case 'submissions':
+            container.innerHTML = renderSubmissions();
+            break;
+          default:
+            container.innerHTML = renderDashboard();
+        }
+        
+        // 이벤트 리스너 재설정
+        attachEventListeners();
+      }
+      
+      function renderDashboard() {
+        const totalPlayers = players.length;
+        const totalSongs = songs.length;
+        const totalPracticeRecords = practiceRecords.length;
+        const totalSubmissions = submissions.length;
+        
+        const gradeStats = players.reduce((acc, player) => {
+          acc[player.grade] = (acc[player.grade] || 0) + 1;
+          return acc;
+        }, {});
+        
+        return `
+          <div class="card">
+            <h2>📊 대시보드</h2>
+            <p>월간 뒤포르 셀로 연습 관리 현황을 확인하세요.</p>
+            
+            <div class="grid grid-4">
+              <div class="status-card">
+                <h3>${totalPlayers}</h3>
+                <p>총 연주자</p>
+              </div>
+              <div class="status-card">
+                <h3>${totalSongs}</h3>
+                <p>총 곡 수</p>
+              </div>
+              <div class="status-card">
+                <h3>${totalPracticeRecords}</h3>
+                <p>연습 기록</p>
+              </div>
+              <div class="status-card">
+                <h3>${totalSubmissions}</h3>
+                <p>결과 제출</p>
+              </div>
+            </div>
+            
+            <div class="grid grid-2" style="margin-top: 2rem;">
+              <div class="card">
+                <h3>등급별 연주자 현황</h3>
+                ${Object.entries(gradeStats).map(([grade, count]) => `
+                  <p>${grade}: ${count}명</p>
+                `).join('')}
+              </div>
+              <div class="card">
+                <h3>최근 활동</h3>
+                <p>최근 연습 기록: ${practiceRecords.length > 0 ? practiceRecords.slice(-3).map(record => 
+                  `${record.c_players?.nickname || 'Unknown'}: ${record.c_songs?.title || 'Unknown'}`).join(', ') : '없음'}</p>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      
+      function renderPlayers() {
+        return `
+          <div class="card">
+            <h2>👥 연주자 관리</h2>
+            <button onclick="showAddPlayerForm()" class="btn" style="margin-bottom: 1rem;">연주자 추가</button>
+            
+            <div id="players-list">
+              ${players.map(player => `
+                <div class="card" style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+                  <div>
+                    <h3>${player.nickname}</h3>
+                    <p>등급: ${player.grade}</p>
+                    <small>등록일: ${new Date(player.created_at).toLocaleDateString()}</small>
+                  </div>
+                  <div>
+                    <button onclick="editPlayer('${player.id}')" class="btn" style="margin-right: 0.5rem; padding: 0.5rem 1rem;">수정</button>
+                    <button onclick="deletePlayer('${player.id}')" class="btn" style="background: rgba(255, 0, 0, 0.3); padding: 0.5rem 1rem;">삭제</button>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+          
+          <div id="player-form-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; color: black; padding: 2rem; border-radius: 8px; max-width: 400px; width: 90%;">
+              <h3 id="player-form-title">연주자 추가</h3>
+              <form id="player-form">
+                <div style="margin-bottom: 1rem;">
+                  <label>닉네임:</label>
+                  <input type="text" id="player-nickname" required style="width: 100%; padding: 0.5rem; margin-top: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+                </div>
+                <div style="margin-bottom: 1rem;">
+                  <label>등급:</label>
+                  <select id="player-grade" required style="width: 100%; padding: 0.5rem; margin-top: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+                    <option value="알">알</option>
+                    <option value="애벌래">애벌래</option>
+                    <option value="미들">미들</option>
+                    <option value="엑스퍼트">엑스퍼트</option>
+                  </select>
+                </div>
+                <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                  <button type="submit" class="btn" style="flex: 1; background: #667eea; color: white; border: none; padding: 0.75rem 1rem; border-radius: 4px; cursor: pointer;">저장</button>
+                  <button type="button" onclick="closePlayerForm()" class="btn" style="flex: 1; background: #6c757d; color: white; border: none; padding: 0.75rem 1rem; border-radius: 4px; cursor: pointer;">취소</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        `;
+      }
+      
+      function renderSongs() {
+        return `
+          <div class="card">
+            <h2>🎵 곡 관리</h2>
+            <button onclick="showAddSongForm()" class="btn" style="margin-bottom: 1rem;">곡 추가</button>
+            
+            <div id="songs-list">
+              ${songs.map(song => `
+                <div class="card" style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+                  <div>
+                    <h3>${song.title}</h3>
+                    <p>작곡가: ${song.composer}</p>
+                    <p>등급: ${song.grade} | ${song.year}년 ${song.month}월</p>
+                    ${song.accompaniment_url ? `<p><strong>반주:</strong> <a href="${song.accompaniment_url}" target="_blank" style="color: #667eea;">🔊 반주 듣기</a></p>` : ''}
+                    ${song.sheet_music_url ? `<p><strong>악보:</strong> <a href="${song.sheet_music_url}" target="_blank" style="color: #667eea;">📄 악보 보기</a></p>` : ''}
+                  </div>
+                  <div>
+                    <button onclick="editSong('${song.id}')" class="btn" style="margin-right: 0.5rem; padding: 0.5rem 1rem;">수정</button>
+                    <button onclick="deleteSong('${song.id}')" class="btn" style="background: rgba(255, 0, 0, 0.3); padding: 0.5rem 1rem;">삭제</button>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+          
+          <div id="song-form-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; color: black; padding: 2rem; border-radius: 8px; max-width: 400px; width: 90%;">
+              <h3 id="song-form-title">곡 추가</h3>
+              <form id="song-form">
+                <div style="margin-bottom: 1rem;">
+                  <label>곡명:</label>
+                  <input type="text" id="song-title" required style="width: 100%; padding: 0.5rem; margin-top: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+                </div>
+                <div style="margin-bottom: 1rem;">
+                  <label>작곡가:</label>
+                  <input type="text" id="song-composer" required style="width: 100%; padding: 0.5rem; margin-top: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+                </div>
+                <div style="margin-bottom: 1rem;">
+                  <label>등급:</label>
+                  <select id="song-grade" required style="width: 100%; padding: 0.5rem; margin-top: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+                    <option value="알">알</option>
+                    <option value="애벌래">애벌래</option>
+                    <option value="미들">미들</option>
+                    <option value="엑스퍼트">엑스퍼트</option>
+                  </select>
+                </div>
+                <div style="margin-bottom: 1rem;">
+                  <label>년도:</label>
+                  <input type="number" id="song-year" min="2020" max="2030" value="${new Date().getFullYear()}" required style="width: 100%; padding: 0.5rem; margin-top: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+                </div>
+                <div style="margin-bottom: 1rem;">
+                  <label>월:</label>
+                  <select id="song-month" required style="width: 100%; padding: 0.5rem; margin-top: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+                    ${Array.from({length: 12}, (_, i) => `<option value="${i+1}" ${i+1 === new Date().getMonth() + 1 ? 'selected' : ''}>${i+1}월</option>`).join('')}
+                  </select>
+                </div>
+                <div style="margin-bottom: 1rem;">
+                  <label>반주 링크 (선택사항):</label>
+                  <input type="url" id="song-accompaniment-url" placeholder="https://youtube.com/watch?v=..." style="width: 100%; padding: 0.5rem; margin-top: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+                  <small style="color: #666; font-size: 0.8rem;">YouTube, SoundCloud 등의 반주 링크를 입력하세요</small>
+                </div>
+                <div style="margin-bottom: 1rem;">
+                  <label>악보 링크 (선택사항):</label>
+                  <input type="url" id="song-sheet-music-url" placeholder="https://example.com/sheet.pdf" style="width: 100%; padding: 0.5rem; margin-top: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+                  <small style="color: #666; font-size: 0.8rem;">PDF, 이미지 등의 악보 링크를 입력하세요</small>
+                </div>
+                <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                  <button type="submit" class="btn" style="flex: 1; background: #667eea; color: white; border: none; padding: 0.75rem 1rem; border-radius: 4px; cursor: pointer;">저장</button>
+                  <button type="button" onclick="closeSongForm()" class="btn" style="flex: 1; background: #6c757d; color: white; border: none; padding: 0.75rem 1rem; border-radius: 4px; cursor: pointer;">취소</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        `;
+      }
+      
+      function renderPractice() {
+        const currentDate = new Date();
+        const currentYear = currentDate.getFullYear();
+        const currentMonth = currentDate.getMonth() + 1;
+        
+        return `
+          <div class="card">
+            <h2>✅ 연습 체크</h2>
+            <p>연주자별 곡별 연습 기록을 관리하세요.</p>
+            
+            <div style="margin-bottom: 2rem;">
+              <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; margin-bottom: 1rem;">
+                <label>년월 선택:</label>
+                <input type="number" id="practice-year" min="2020" max="2030" value="${currentYear}" style="padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; width: 100px;">
+                <select id="practice-month" style="padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+                  ${Array.from({length: 12}, (_, i) => `<option value="${i+1}" ${i+1 === currentMonth ? 'selected' : ''}>${i+1}월</option>`).join('')}
+                </select>
+              </div>
+              
+              <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                <label>연주자 필터:</label>
+                <select id="practice-player-filter" style="padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; min-width: 150px;">
+                  <option value="">전체 연주자</option>
+                  ${players.map(player => `<option value="${player.id}">${player.nickname} (${player.grade})</option>`).join('')}
+                </select>
+                <button onclick="clearPlayerFilter()" class="btn" style="padding: 0.5rem 1rem; background: rgba(255, 255, 255, 0.1); font-size: 0.9rem;">필터 초기화</button>
+              </div>
+            </div>
+            
+            <div id="practice-list">
+              ${generatePracticeCalendar()}
+            </div>
+          </div>
+        `;
+      }
+      
+      function renderSubmissions() {
+        return `
+          <div class="card">
+            <h2>🎯 결과 제출</h2>
+            <button onclick="showAddSubmissionForm()" class="btn" style="margin-bottom: 1rem;">결과 제출</button>
+            
+            <div id="submissions-list">
+              ${submissions.map(submission => `
+                <div class="card" style="margin-bottom: 1rem;">
+                  <h3>${submission.title || '제목 없음'}</h3>
+                  <p><strong>연주자:</strong> ${submission.c_players?.nickname || 'Unknown'}</p>
+                  <p><strong>곡:</strong> ${submission.c_songs?.title || 'Unknown'}</p>
+                  <p><strong>URL:</strong> <a href="${submission.submission_url}" target="_blank" style="color: #667eea;">${submission.submission_url}</a></p>
+                  ${submission.description ? `<p><strong>설명:</strong> ${submission.description}</p>` : ''}
+                  <p><strong>제출일:</strong> ${new Date(submission.submitted_at).toLocaleString()}</p>
+                  <button onclick="deleteSubmission('${submission.id}')" class="btn" style="background: rgba(255, 0, 0, 0.3); padding: 0.5rem 1rem; margin-top: 1rem;">삭제</button>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+          
+          <div id="submission-form-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; color: black; padding: 2rem; border-radius: 8px; max-width: 500px; width: 90%;">
+              <h3 id="submission-form-title">결과 제출</h3>
+              <form id="submission-form">
+                <div style="margin-bottom: 1rem;">
+                  <label>연주자:</label>
+                  <select id="submission-player" required style="width: 100%; padding: 0.5rem; margin-top: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+                    ${players.map(player => `<option value="${player.id}">${player.nickname} (${player.grade})</option>`).join('')}
+                  </select>
+                </div>
+                <div style="margin-bottom: 1rem;">
+                  <label>곡:</label>
+                  <select id="submission-song" required style="width: 100%; padding: 0.5rem; margin-top: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+                    ${songs.map(song => `<option value="${song.id}">${song.title} - ${song.composer} (${song.grade})</option>`).join('')}
+                  </select>
+                </div>
+                <div style="margin-bottom: 1rem;">
+                  <label>제출 URL:</label>
+                  <input type="url" id="submission-url" required style="width: 100%; padding: 0.5rem; margin-top: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+                </div>
+                <div style="margin-bottom: 1rem;">
+                  <label>제목 (선택사항):</label>
+                  <input type="text" id="submission-title" style="width: 100%; padding: 0.5rem; margin-top: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+                </div>
+                <div style="margin-bottom: 1rem;">
+                  <label>설명 (선택사항):</label>
+                  <textarea id="submission-description" rows="3" style="width: 100%; padding: 0.5rem; margin-top: 0.5rem; border: 1px solid #ccc; border-radius: 4px; resize: vertical;"></textarea>
+                </div>
+                <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                  <button type="submit" class="btn" style="flex: 1; background: #667eea; color: white; border: none; padding: 0.75rem 1rem; border-radius: 4px; cursor: pointer;">제출</button>
+                  <button type="button" onclick="closeSubmissionForm()" class="btn" style="flex: 1; background: #6c757d; color: white; border: none; padding: 0.75rem 1rem; border-radius: 4px; cursor: pointer;">취소</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        `;
+      }
+      
+      function generatePracticeCalendar() {
+        const year = parseInt(document.getElementById('practice-year')?.value || new Date().getFullYear());
+        const month = parseInt(document.getElementById('practice-month')?.value || (new Date().getMonth() + 1));
+        const selectedPlayerId = document.getElementById('practice-player-filter')?.value || '';
+        
+        // 해당 월의 모든 연습 기록 가져오기
+        let monthRecords = practiceRecords.filter(record => {
+          const recordDate = new Date(record.practice_date);
+          return recordDate.getFullYear() === year && recordDate.getMonth() + 1 === month;
+        });
+        
+        // 연주자 필터 적용
+        if (selectedPlayerId) {
+          monthRecords = monthRecords.filter(record => record.player_id === selectedPlayerId);
+        }
+        
+        // 날짜별로 그룹화
+        const dateGroups = {};
+        monthRecords.forEach(record => {
+          const date = record.practice_date;
+          if (!dateGroups[date]) {
+            dateGroups[date] = [];
+          }
+          dateGroups[date].push(record);
+        });
+        
+        // 1일부터 31일까지 모든 날짜 생성
+        const daysInMonth = new Date(year, month, 0).getDate();
+        const calendarDays = [];
+        
+        for (let day = 1; day <= daysInMonth; day++) {
+          const dateStr = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+          const dayRecords = dateGroups[dateStr] || [];
+          
+          calendarDays.push({
+            day: day,
+            dateStr: dateStr,
+            records: dayRecords
+          });
+        }
+        
+        const selectedPlayer = selectedPlayerId ? players.find(p => p.id === selectedPlayerId) : null;
+        
+        return `
+          <div class="card" style="margin-bottom: 1rem;">
+            <h3>📅 ${year}년 ${month}월 연습 기록</h3>
+            <p>총 ${monthRecords.length}개의 연습 기록이 있습니다.
+            ${selectedPlayer ? `<span style="color: #667eea;">(필터: ${selectedPlayer.nickname})</span>` : ''}</p>
+          </div>
+          
+          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem;">
+            ${calendarDays.map(dayData => `
+              <div class="card" style="min-height: 200px;">
+                <h4 style="margin-bottom: 1rem; color: #667eea; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 0.5rem;">
+                  ${dayData.day}일 (${dayData.records.length}개)
+                </h4>
+                
+                ${dayData.records.length > 0 ? `
+                  <div style="max-height: 150px; overflow-y: auto;">
+                    ${dayData.records.map(record => {
+                      const player = players.find(p => p.id === record.player_id);
+                      const song = songs.find(s => s.id === record.song_id);
+                      if (!player || !song) return '';
+                      
+                      return `
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin: 0.5rem 0; padding: 0.5rem; background: rgba(255,255,255,0.05); border-radius: 4px; font-size: 0.9rem;">
+                          <div>
+                            <div><strong>${song.title}</strong></div>
+                            <div style="opacity: 0.7; font-size: 0.8rem;">${player.nickname}</div>
+                          </div>
+                          <button onclick="togglePractice('${player.id}', '${song.id}', '${dayData.dateStr}', ${!record.practiced})" 
+                                  class="btn" 
+                                  style="padding: 0.25rem 0.5rem; background: ${record.practiced ? 'rgba(0, 255, 0, 0.3)' : 'rgba(255, 255, 255, 0.1)'}; font-size: 0.8rem;">
+                            ${record.practiced ? '✅' : '⭕'}
+                          </button>
+                        </div>
+                      `;
+                    }).join('')}
+                  </div>
+                ` : `
+                  <div style="text-align: center; padding: 1rem; opacity: 0.5;">
+                    <p>연습 기록 없음</p>
+                    <button onclick="showAddPracticeModal('${dayData.dateStr}')" 
+                            class="btn" 
+                            style="padding: 0.5rem 1rem; background: rgba(255, 255, 255, 0.1); font-size: 0.8rem;">
+                      + 연습 추가
+                    </button>
+                  </div>
+                `}
+              </div>
+            `).join('')}
+          </div>
+          
+          <!-- 연습 추가 모달 -->
+          <div id="add-practice-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
+            <div style="position: absolute; top: 10%; left: 50%; transform: translateX(-50%); background: white; color: black; padding: 2rem; border-radius: 8px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+              <h3 id="add-practice-title">연습 기록 추가</h3>
+              <form id="add-practice-form">
+                <div style="margin-bottom: 1rem;">
+                  <label>연주자:</label>
+                  <select id="add-practice-player" required style="width: 100%; padding: 0.5rem; margin-top: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+                    ${players.map(player => `<option value="${player.id}">${player.nickname} (${player.grade})</option>`).join('')}
+                  </select>
+                </div>
+                <div style="margin-bottom: 1rem;">
+                  <label>곡:</label>
+                  <select id="add-practice-song" required style="width: 100%; padding: 0.5rem; margin-top: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+                    ${songs.map(song => `<option value="${song.id}">${song.title} - ${song.composer} (${song.grade})</option>`).join('')}
+                  </select>
+                </div>
+                <div style="margin-bottom: 1rem;">
+                  <label>연습 상태:</label>
+                  <select id="add-practice-status" required style="width: 100%; padding: 0.5rem; margin-top: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+                    <option value="true">✅ 완료</option>
+                    <option value="false">⭕ 미완료</option>
+                  </select>
+                </div>
+                <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                  <button type="submit" class="btn" style="flex: 1; background: #667eea; color: white; border: none; padding: 0.75rem 1rem; border-radius: 4px; cursor: pointer;">추가</button>
+                  <button type="button" onclick="closeAddPracticeModal()" class="btn" style="flex: 1; background: #6c757d; color: white; border: none; padding: 0.75rem 1rem; border-radius: 4px; cursor: pointer;">취소</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        `;
+      }
+      
+      function attachEventListeners() {
+        // 연습 년월 변경 이벤트
+        const practiceYearInput = document.getElementById('practice-year');
+        const practiceMonthInput = document.getElementById('practice-month');
+        
+        if (practiceYearInput) {
+          practiceYearInput.addEventListener('change', () => {
+            if (currentView === 'practice') {
+              renderView();
+            }
+          });
+        }
+        
+        if (practiceMonthInput) {
+          practiceMonthInput.addEventListener('change', () => {
+            if (currentView === 'practice') {
+              renderView();
+            }
+          });
+        }
+        
+        // 연주자 필터 변경 이벤트
+        const practicePlayerFilter = document.getElementById('practice-player-filter');
+        if (practicePlayerFilter) {
+          practicePlayerFilter.addEventListener('change', () => {
+            if (currentView === 'practice') {
+              renderView();
+            }
+          });
+        }
+        
+        // 폼 제출 이벤트들
+        const playerForm = document.getElementById('player-form');
+        if (playerForm) {
+          playerForm.addEventListener('submit', handlePlayerSubmit);
+        }
+        
+        const songForm = document.getElementById('song-form');
+        if (songForm) {
+          songForm.addEventListener('submit', handleSongSubmit);
+        }
+        
+        const submissionForm = document.getElementById('submission-form');
+        if (submissionForm) {
+          submissionForm.addEventListener('submit', handleSubmissionSubmit);
+        }
+        
+        const addPracticeForm = document.getElementById('add-practice-form');
+        if (addPracticeForm) {
+          // 기존 이벤트 리스너 제거 후 새로 추가 (중복 방지)
+          addPracticeForm.removeEventListener('submit', handleAddPracticeSubmit);
+          addPracticeForm.addEventListener('submit', handleAddPracticeSubmit);
+          console.log('연습 추가 폼 이벤트 리스너 연결됨');
+        } else {
+          console.log('연습 추가 폼을 찾을 수 없음');
+        }
+      }
+      
+      // 연주자 관리 함수들
+      function showAddPlayerForm() {
+        document.getElementById('player-form-title').textContent = '연주자 추가';
+        document.getElementById('player-form').reset();
+        document.getElementById('player-form-modal').style.display = 'block';
+      }
+      
+      function editPlayer(playerId) {
+        const player = players.find(p => p.id === playerId);
+        if (player) {
+          document.getElementById('player-form-title').textContent = '연주자 수정';
+          document.getElementById('player-nickname').value = player.nickname;
+          document.getElementById('player-grade').value = player.grade;
+          document.getElementById('player-form').dataset.playerId = playerId;
+          document.getElementById('player-form-modal').style.display = 'block';
+        }
+      }
+      
+      function closePlayerForm() {
+        document.getElementById('player-form-modal').style.display = 'none';
+        document.getElementById('player-form').dataset.playerId = '';
+      }
+      
+      async function handlePlayerSubmit(e) {
+        e.preventDefault();
+        
+        const formData = {
+          nickname: document.getElementById('player-nickname').value,
+          grade: document.getElementById('player-grade').value
+        };
+        
+        const playerId = document.getElementById('player-form').dataset.playerId;
+        
+        try {
+          if (playerId) {
+            // 수정
+            const { error } = await supabase
+              .from('c_players')
+              .update(formData)
+              .eq('id', playerId);
+              
+            if (error) throw error;
+            showSuccess('연주자 정보가 수정되었습니다.');
+          } else {
+            // 추가
+            const { error } = await supabase
+              .from('c_players')
+              .insert([formData]);
+              
+            if (error) throw error;
+            showSuccess('연주자가 추가되었습니다.');
+          }
+          
+          closePlayerForm();
+          loadData();
+        } catch (error) {
+          console.error('연주자 저장 오류:', error);
+          showError('저장 중 오류가 발생했습니다: ' + error.message);
+        }
+      }
+      
+      async function deletePlayer(playerId) {
+        if (!confirm('정말로 이 연주자를 삭제하시겠습니까?')) return;
+        
+        try {
+          const { error } = await supabase
+            .from('c_players')
+            .delete()
+            .eq('id', playerId);
+            
+          if (error) throw error;
+          
+          showSuccess('연주자가 삭제되었습니다.');
+          loadData();
+        } catch (error) {
+          console.error('연주자 삭제 오류:', error);
+          showError('삭제 중 오류가 발생했습니다: ' + error.message);
+        }
+      }
+      
+      // 곡 관리 함수들
+      function showAddSongForm() {
+        document.getElementById('song-form-title').textContent = '곡 추가';
+        document.getElementById('song-form').reset();
+        document.getElementById('song-form-modal').style.display = 'block';
+      }
+      
+      function editSong(songId) {
+        const song = songs.find(s => s.id === songId);
+        if (song) {
+          document.getElementById('song-form-title').textContent = '곡 수정';
+          document.getElementById('song-title').value = song.title;
+          document.getElementById('song-composer').value = song.composer;
+          document.getElementById('song-grade').value = song.grade;
+          document.getElementById('song-year').value = song.year;
+          document.getElementById('song-month').value = song.month;
+          document.getElementById('song-accompaniment-url').value = song.accompaniment_url || '';
+          document.getElementById('song-sheet-music-url').value = song.sheet_music_url || '';
+          document.getElementById('song-form').dataset.songId = songId;
+          document.getElementById('song-form-modal').style.display = 'block';
+        }
+      }
+      
+      function closeSongForm() {
+        document.getElementById('song-form-modal').style.display = 'none';
+        document.getElementById('song-form').dataset.songId = '';
+      }
+      
+      async function handleSongSubmit(e) {
+        e.preventDefault();
+        
+        const formData = {
+          title: document.getElementById('song-title').value,
+          composer: document.getElementById('song-composer').value,
+          grade: document.getElementById('song-grade').value,
+          year: parseInt(document.getElementById('song-year').value),
+          month: parseInt(document.getElementById('song-month').value),
+          accompaniment_url: document.getElementById('song-accompaniment-url').value || null,
+          sheet_music_url: document.getElementById('song-sheet-music-url').value || null
+        };
+        
+        const songId = document.getElementById('song-form').dataset.songId;
+        
+        try {
+          if (songId) {
+            // 수정
+            const { error } = await supabase
+              .from('c_songs')
+              .update(formData)
+              .eq('id', songId);
+              
+            if (error) throw error;
+            showSuccess('곡 정보가 수정되었습니다.');
+          } else {
+            // 추가
+            const { error } = await supabase
+              .from('c_songs')
+              .insert([formData]);
+              
+            if (error) throw error;
+            showSuccess('곡이 추가되었습니다.');
+          }
+          
+          closeSongForm();
+          loadData();
+        } catch (error) {
+          console.error('곡 저장 오류:', error);
+          showError('저장 중 오류가 발생했습니다: ' + error.message);
+        }
+      }
+      
+      async function deleteSong(songId) {
+        if (!confirm('정말로 이 곡을 삭제하시겠습니까?')) return;
+        
+        try {
+          const { error } = await supabase
+            .from('c_songs')
+            .delete()
+            .eq('id', songId);
+            
+          if (error) throw error;
+          
+          showSuccess('곡이 삭제되었습니다.');
+          loadData();
+        } catch (error) {
+          console.error('곡 삭제 오류:', error);
+          showError('삭제 중 오류가 발생했습니다: ' + error.message);
+        }
+      }
+      
+      // 연습 체크 함수들
+      async function togglePractice(playerId, songId, date, practiced) {
+        try {
+          // 기존 기록 확인
+          const { data: existingRecord } = await supabase
+            .from('c_practice_records')
+            .select('id')
+            .eq('player_id', playerId)
+            .eq('song_id', songId)
+            .eq('practice_date', date)
+            .single();
+          
+          if (existingRecord) {
+            // 업데이트
+            const { error } = await supabase
+              .from('c_practice_records')
+              .update({ practiced })
+              .eq('id', existingRecord.id);
+              
+            if (error) throw error;
+          } else {
+            // 새로 생성
+            const { error } = await supabase
+              .from('c_practice_records')
+              .insert([{
+                player_id: playerId,
+                song_id: songId,
+                practice_date: date,
+                practiced
+              }]);
+              
+            if (error) throw error;
+          }
+          
+          // 데이터 다시 로드
+          const { data: practiceResult } = await supabase
+            .from('c_practice_records')
+            .select('*, c_players(nickname), c_songs(title)');
+          
+          practiceRecords = practiceResult || [];
+          
+          // 현재 뷰가 연습 체크면 다시 렌더링
+          if (currentView === 'practice') {
+            renderView();
+          }
+          
+        } catch (error) {
+          console.error('연습 기록 업데이트 오류:', error);
+          showError('연습 기록 업데이트 중 오류가 발생했습니다: ' + error.message);
+        }
+      }
+      
+      // 결과 제출 함수들
+      function showAddSubmissionForm() {
+        document.getElementById('submission-form-title').textContent = '결과 제출';
+        document.getElementById('submission-form').reset();
+        document.getElementById('submission-form-modal').style.display = 'block';
+      }
+      
+      function closeSubmissionForm() {
+        document.getElementById('submission-form-modal').style.display = 'none';
+      }
+      
+      async function handleSubmissionSubmit(e) {
+        e.preventDefault();
+        
+        const formData = {
+          player_id: document.getElementById('submission-player').value,
+          song_id: document.getElementById('submission-song').value,
+          submission_url: document.getElementById('submission-url').value,
+          title: document.getElementById('submission-title').value || null,
+          description: document.getElementById('submission-description').value || null
+        };
+        
+        try {
+          const { error } = await supabase
+            .from('c_submissions')
+            .insert([formData]);
+            
+          if (error) throw error;
+          
+          showSuccess('결과가 제출되었습니다.');
+          closeSubmissionForm();
+          loadData();
+        } catch (error) {
+          console.error('결과 제출 오류:', error);
+          showError('제출 중 오류가 발생했습니다: ' + error.message);
+        }
+      }
+      
+      async function deleteSubmission(submissionId) {
+        if (!confirm('정말로 이 제출 결과를 삭제하시겠습니까?')) return;
+        
+        try {
+          const { error } = await supabase
+            .from('c_submissions')
+            .delete()
+            .eq('id', submissionId);
+            
+          if (error) throw error;
+          
+          showSuccess('제출 결과가 삭제되었습니다.');
+          loadData();
+        } catch (error) {
+          console.error('제출 결과 삭제 오류:', error);
+          showError('삭제 중 오류가 발생했습니다: ' + error.message);
+        }
+      }
+      
+      // 연주자 필터 초기화 함수
+      function clearPlayerFilter() {
+        const playerFilter = document.getElementById('practice-player-filter');
+        if (playerFilter) {
+          playerFilter.value = '';
+          if (currentView === 'practice') {
+            renderView();
+          }
+        }
+      }
+      
+      // 연습 추가 모달 함수들
+      function showAddPracticeModal(dateStr) {
+        console.log('연습 추가 모달 열기:', dateStr);
+        
+        const modal = document.getElementById('add-practice-modal');
+        const form = document.getElementById('add-practice-form');
+        const title = document.getElementById('add-practice-title');
+        
+        if (!modal || !form || !title) {
+          console.error('모달 요소를 찾을 수 없습니다');
+          showError('모달을 열 수 없습니다. 페이지를 새로고침해주세요.');
+          return;
+        }
+        
+        title.textContent = `${dateStr} 연습 기록 추가`;
+        form.dataset.practiceDate = dateStr;
+        form.reset();
+        
+        // 현재 필터된 연주자가 있으면 자동 선택
+        const selectedPlayerId = document.getElementById('practice-player-filter')?.value;
+        if (selectedPlayerId) {
+          const playerSelect = document.getElementById('add-practice-player');
+          if (playerSelect) {
+            playerSelect.value = selectedPlayerId;
+            console.log('자동 선택된 연주자:', selectedPlayerId);
+          }
+        }
+        
+        modal.style.display = 'block';
+        console.log('모달 표시됨');
+      }
+      
+      function closeAddPracticeModal() {
+        document.getElementById('add-practice-modal').style.display = 'none';
+        document.getElementById('add-practice-form').dataset.practiceDate = '';
+      }
+      
+      async function handleAddPracticeSubmit(e) {
+        e.preventDefault();
+        
+        console.log('연습 추가 폼 제출 시작');
+        
+        const formData = {
+          player_id: document.getElementById('add-practice-player').value,
+          song_id: document.getElementById('add-practice-song').value,
+          practice_date: document.getElementById('add-practice-form').dataset.practiceDate,
+          practiced: document.getElementById('add-practice-status').value === 'true'
+        };
+        
+        console.log('폼 데이터:', formData);
+        
+        // 필수 필드 검증
+        if (!formData.player_id || !formData.song_id || !formData.practice_date) {
+          showError('모든 필드를 입력해주세요.');
+          return;
+        }
+        
+        try {
+          console.log('Supabase에 데이터 전송 중...');
+          const { error } = await supabase
+            .from('c_practice_records')
+            .insert([formData]);
+            
+          if (error) {
+            console.error('Supabase 오류:', error);
+            throw error;
+          }
+          
+          console.log('연습 기록 추가 성공');
+          showSuccess('연습 기록이 추가되었습니다.');
+          closeAddPracticeModal();
+          loadData();
+        } catch (error) {
+          console.error('연습 기록 추가 오류:', error);
+          showError('추가 중 오류가 발생했습니다: ' + error.message);
+        }
+      }
+      
+      // 유틸리티 함수들
+      function showSuccess(message) {
+        showNotification(message, 'success');
+      }
+      
+      function showError(message) {
+        showNotification(message, 'error');
+      }
+      
+      function showNotification(message, type) {
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          padding: 1rem 2rem;
+          background: ${type === 'success' ? '#4CAF50' : '#f44336'};
+          color: white;
+          border-radius: 4px;
+          z-index: 10000;
+          box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        `;
+        notification.textContent = message;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+          notification.remove();
+        }, 3000);
+      }
+    </script>
+  </body>
+</html>
