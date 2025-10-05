@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS c_practice_records (
   practice_date DATE NOT NULL,
   practiced BOOLEAN NOT NULL DEFAULT FALSE,
   notes TEXT,
+  recording_url TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   UNIQUE(player_id, song_id, practice_date)
@@ -54,6 +55,7 @@ CREATE INDEX IF NOT EXISTS idx_c_players_grade ON c_players(grade);
 CREATE INDEX IF NOT EXISTS idx_c_songs_grade_month_year ON c_songs(grade, month, year);
 CREATE INDEX IF NOT EXISTS idx_c_practice_records_player_song ON c_practice_records(player_id, song_id);
 CREATE INDEX IF NOT EXISTS idx_c_practice_records_date ON c_practice_records(practice_date);
+CREATE INDEX IF NOT EXISTS idx_c_practice_records_recording_url ON c_practice_records(recording_url) WHERE recording_url IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_c_submissions_player_song ON c_submissions(player_id, song_id);
 
 -- RLS (Row Level Security) 활성화
@@ -82,3 +84,6 @@ CREATE TRIGGER update_c_players_updated_at BEFORE UPDATE ON c_players FOR EACH R
 CREATE TRIGGER update_c_songs_updated_at BEFORE UPDATE ON c_songs FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_c_practice_records_updated_at BEFORE UPDATE ON c_practice_records FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_c_submissions_updated_at BEFORE UPDATE ON c_submissions FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- 컬럼 설명 추가
+COMMENT ON COLUMN c_practice_records.recording_url IS '녹음 파일의 Supabase Storage URL';
