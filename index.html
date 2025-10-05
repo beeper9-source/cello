@@ -1189,7 +1189,7 @@
         const hashArray = Array.from(new Uint8Array(hashBuffer));
         const inputHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
         
-        // 저장된 해시값 (22331의 SHA-256 해시)
+        // 저장된 해시값
         const storedHash = 'f869fefc282b7023335d4ef78ebee7ee63bf272be360249c59bd511de10d87be';
         
         return inputHash === storedHash;
