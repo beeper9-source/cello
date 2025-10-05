@@ -213,7 +213,7 @@
         <div class="header-content">
           <img src="logo.JPG" alt="월간 뒤포르 로고" class="logo" />
           <div class="header-text">
-            <h1>🎵 월간 뒤포르</h1>
+        <h1>🎵 월간 뒤포르</h1>
             <p>Cello 연습 관리 시스템</p>
           </div>
         </div>
@@ -455,8 +455,8 @@
                         <div style="font-size: 0.9rem; color: #666;">명 (${percentage}%)</div>
                         <div style="background: rgba(102, 126, 234, 0.2); height: 8px; border-radius: 4px; margin-top: 0.5rem; overflow: hidden;">
                           <div style="background: #667eea; height: 100%; width: ${percentage}%; transition: width 0.3s ease;"></div>
-                        </div>
-                      </div>
+              </div>
+              </div>
                     `;
                   }).join('')}
                 </div>
@@ -490,9 +490,9 @@
                               <div style="font-size: 0.85rem; color: #666; text-align: right;">
                                 <div>${dateStr}</div>
                                 <div>${timeStr}</div>
-                              </div>
-                            </div>
-                          `;
+            </div>
+          </div>
+        `;
                         }).join('') : 
                       '<div style="text-align: center; padding: 2rem; color: #999; font-style: italic;">연습 기록이 없습니다</div>'
                     }
@@ -559,7 +559,7 @@
         return `
           <div class="card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-              <h2>👥 연주자 관리</h2>
+            <h2>👥 연주자 관리</h2>
               <button onclick="showAddPlayerForm()" class="btn" style="background: rgba(102, 126, 234, 0.3); padding: 0.75rem 1.5rem; font-weight: bold;">
                 + 연주자 추가
               </button>
@@ -582,12 +582,12 @@
                   <div style="display: flex; flex-direction: column; gap: 1rem;">
                     ${gradePlayers.length > 0 ? gradePlayers.map(player => `
                       <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: rgba(255, 255, 255, 0.7); border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                        <div>
+                  <div>
                           <h4 style="margin: 0; color: #333; font-size: 1.1rem;">${player.nickname}</h4>
                           <p style="margin: 0.25rem 0 0 0; color: #666; font-size: 0.85rem;">
                             등록일: ${new Date(player.created_at).toLocaleDateString()}
                           </p>
-                        </div>
+                  </div>
                         <div style="display: flex; gap: 0.5rem;">
                           <button onclick="editPlayer('${player.id}')" 
                                   class="btn" 
@@ -599,7 +599,7 @@
                                   style="padding: 0.5rem 0.75rem; background: rgba(255, 0, 0, 0.2); font-size: 0.8rem; border-radius: 6px;">
                             🗑️
                           </button>
-                        </div>
+                </div>
                       </div>
                     `).join('') : `
                       <div style="text-align: center; padding: 2rem; color: #999; font-style: italic;">
@@ -659,13 +659,13 @@
                         ${song.accompaniment_url ? `
                           <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem; background: rgba(255, 107, 107, 0.1); border-radius: 8px; border: 1px solid rgba(255, 107, 107, 0.2);">
                             <span style="font-size: 1.2rem;">🎵</span>
-                            <div>
+                  <div>
                               <div style="font-size: 0.85rem; color: #666; margin-bottom: 0.25rem;">반주 링크</div>
                               <a href="${song.accompaniment_url}" target="_blank" 
                                  style="color: #667eea; text-decoration: none; font-weight: 500; font-size: 0.9rem; word-break: break-all;">
                                 ${song.accompaniment_url.length > 50 ? song.accompaniment_url.substring(0, 50) + '...' : song.accompaniment_url}
                               </a>
-                            </div>
+                  </div>
                           </div>
                         ` : `
                           <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem; background: rgba(200, 200, 200, 0.1); border-radius: 8px; border: 1px solid rgba(200, 200, 200, 0.2);">
@@ -677,7 +677,7 @@
                         ${song.sheet_music_url ? `
                           <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem; background: rgba(107, 255, 107, 0.1); border-radius: 8px; border: 1px solid rgba(107, 255, 107, 0.2);">
                             <span style="font-size: 1.2rem;">📄</span>
-                            <div>
+                  <div>
                               <div style="font-size: 0.85rem; color: #666; margin-bottom: 0.25rem;">악보 링크</div>
                               <a href="${song.sheet_music_url}" target="_blank" 
                                  style="color: #667eea; text-decoration: none; font-weight: 500; font-size: 0.9rem; word-break: break-all;">
@@ -1632,28 +1632,208 @@
       
       // 개선요청 게시판 렌더링 함수
       function renderFeedback() {
+        return renderFeedbackWithData(feedback);
+      }
+      
+      // 개선요청 관련 함수들
+      function showAddFeedbackForm() {
+        document.getElementById('feedback-form-title').textContent = '개선요청 작성';
+        document.getElementById('feedback-form').reset();
+        document.getElementById('feedback-form-modal').style.display = 'block';
+      }
+      
+      function closeFeedbackForm() {
+        document.getElementById('feedback-form-modal').style.display = 'none';
+      }
+      
+      async function handleFeedbackSubmit(e) {
+        e.preventDefault();
+        
+        const formData = {
+          title: document.getElementById('feedback-title').value,
+          content: document.getElementById('feedback-content').value,
+          author_name: document.getElementById('feedback-author').value,
+          author_email: document.getElementById('feedback-email').value || null,
+          category: document.getElementById('feedback-category').value,
+          priority: document.getElementById('feedback-priority').value
+        };
+        
+        try {
+          const { error } = await supabase
+            .from('c_feedback')
+            .insert([formData]);
+            
+          if (error) throw error;
+          
+          showSuccess('개선요청이 제출되었습니다.');
+          closeFeedbackForm();
+          loadData();
+        } catch (error) {
+          console.error('개선요청 제출 오류:', error);
+          showError('제출 중 오류가 발생했습니다: ' + error.message);
+        }
+      }
+      
+      // 개선요청 상태 업데이트 함수
+      async function updateFeedbackStatus(feedbackId, newStatus) {
+        try {
+          // 현재 개선요청 데이터 가져오기
+          const feedbackItem = feedback.find(item => item.id === feedbackId);
+          if (!feedbackItem) {
+            showError('개선요청을 찾을 수 없습니다.');
+            return;
+          }
+
+          // 데이터베이스 상태 업데이트
+          const { error } = await supabase
+            .from('c_feedback')
+            .update({ 
+              status: newStatus,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', feedbackId);
+            
+          if (error) throw error;
+          
+          
+          // 성공 메시지 표시
+          const statusTexts = {
+            'pending': '대기중',
+            'in_progress': '진행중',
+            'completed': '완료',
+            'rejected': '거부'
+          };
+          
+          showSuccess(`상태가 "${statusTexts[newStatus]}"으로 변경되었습니다.`);
+          
+          // 데이터 다시 로드하여 UI 업데이트
+          loadData();
+        } catch (error) {
+          console.error('상태 업데이트 오류:', error);
+          showError('상태 변경 중 오류가 발생했습니다: ' + error.message);
+          
+          // 오류 발생 시 페이지 새로고침으로 원래 상태 복원
+          setTimeout(() => {
+            renderView();
+          }, 1000);
+        }
+      }
+      
+      
+      // 개선요청 필터링 함수들
+      function filterFeedbackByStatus() {
+        const statusFilter = document.getElementById('feedback-status-filter')?.value || '';
+        renderFeedbackWithFilters(statusFilter, '');
+      }
+      
+      function filterFeedbackByCategory() {
+        const categoryFilter = document.getElementById('feedback-category-filter')?.value || '';
+        renderFeedbackWithFilters('', categoryFilter);
+      }
+      
+      function clearFeedbackFilters() {
+        document.getElementById('feedback-status-filter').value = '';
+        document.getElementById('feedback-category-filter').value = '';
+        renderFeedbackWithFilters('', '');
+      }
+      
+      function renderFeedbackWithFilters(statusFilter = '', categoryFilter = '') {
+        const filteredFeedback = feedback.filter(item => {
+          const statusMatch = !statusFilter || item.status === statusFilter;
+          const categoryMatch = !categoryFilter || item.category === categoryFilter;
+          return statusMatch && categoryMatch;
+        });
+        
+        // 필터링된 결과로 게시판 다시 렌더링
+        const container = document.getElementById('content-container');
+        if (container && currentView === 'feedback') {
+          container.innerHTML = renderFeedbackWithData(filteredFeedback);
+          // 이벤트 리스너 재설정
+          attachEventListeners();
+        }
+      }
+      
+      // 삭제 관련 함수들
+      let feedbackToDelete = null;
+      
+      function confirmDeleteFeedback(feedbackId, feedbackTitle) {
+        feedbackToDelete = feedbackId;
+        document.getElementById('delete-feedback-title').textContent = feedbackTitle;
+        document.getElementById('delete-feedback-modal').style.display = 'block';
+      }
+      
+      function closeDeleteFeedbackModal() {
+        document.getElementById('delete-feedback-modal').style.display = 'none';
+        feedbackToDelete = null;
+      }
+      
+      async function deleteFeedback() {
+        if (!feedbackToDelete) {
+          showError('삭제할 개선요청을 찾을 수 없습니다.');
+          return;
+        }
+        
+        try {
+          const { error } = await supabase
+            .from('c_feedback')
+            .delete()
+            .eq('id', feedbackToDelete);
+            
+          if (error) throw error;
+          
+          showSuccess('개선요청이 삭제되었습니다.');
+          closeDeleteFeedbackModal();
+          loadData();
+        } catch (error) {
+          console.error('개선요청 삭제 오류:', error);
+          showError('삭제 중 오류가 발생했습니다: ' + error.message);
+        }
+      }
+      
+      // 필터링된 데이터로 게시판 렌더링하는 헬퍼 함수
+      function renderFeedbackWithData(filteredData) {
         return `
           <div class="card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
               <h2>💬 개선요청 게시판</h2>
               <button onclick="showAddFeedbackForm()" class="btn" style="background: rgba(102, 126, 234, 0.3); padding: 0.75rem 1.5rem; font-weight: bold;">
                 + 새 요청 작성
               </button>
             </div>
             
+            <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; align-items: center;">
+              <label style="font-weight: 500; color: #333;">상태 필터:</label>
+              <select id="feedback-status-filter" onchange="filterFeedbackByStatus()" 
+                      style="padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; background: white; color: #333;">
+                <option value="">전체</option>
+                <option value="pending">대기중</option>
+                <option value="in_progress">진행중</option>
+                <option value="completed">완료</option>
+                <option value="rejected">거부</option>
+              </select>
+              <label style="font-weight: 500; color: #333;">카테고리 필터:</label>
+              <select id="feedback-category-filter" onchange="filterFeedbackByCategory()" 
+                      style="padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; background: white; color: #333;">
+                <option value="">전체</option>
+                <option value="general">일반</option>
+                <option value="ui">UI/UX</option>
+                <option value="functionality">기능</option>
+                <option value="performance">성능</option>
+                <option value="bug">버그</option>
+                <option value="feature">새 기능</option>
+              </select>
+              <button onclick="clearFeedbackFilters()" class="btn" style="padding: 0.5rem 1rem; background: rgba(108, 117, 125, 0.2); font-size: 0.9rem;">
+                필터 초기화
+              </button>
+            </div>
+            
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 1.5rem;">
-              ${feedback.length > 0 ? feedback.map(item => {
+              ${filteredData.length > 0 ? filteredData.map(item => {
                 const statusColors = {
                   'pending': 'rgba(255, 193, 7, 0.2)',
                   'in_progress': 'rgba(33, 150, 243, 0.2)',
                   'completed': 'rgba(76, 175, 80, 0.2)',
                   'rejected': 'rgba(244, 67, 54, 0.2)'
-                };
-                const statusTexts = {
-                  'pending': '대기중',
-                  'in_progress': '진행중',
-                  'completed': '완료',
-                  'rejected': '거부'
                 };
                 const priorityColors = {
                   'low': 'rgba(158, 158, 158, 0.2)',
@@ -1680,10 +1860,16 @@
                   <div class="card" style="border: 2px solid rgba(102, 126, 234, 0.1); border-radius: 12px; padding: 1.5rem;">
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
                       <h3 style="margin: 0; color: #333; font-size: 1.2rem; flex: 1; margin-right: 1rem;">${item.title}</h3>
-                      <div style="display: flex; gap: 0.5rem;">
-                        <span style="padding: 0.25rem 0.5rem; background: ${statusColors[item.status]}; border-radius: 4px; font-size: 0.8rem; color: #333;">
-                          ${statusTexts[item.status]}
-                        </span>
+                      <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <select onchange="updateFeedbackStatus('${item.id}', this.value)" 
+                                style="padding: 0.25rem 0.5rem; background: ${statusColors[item.status]}; border: none; border-radius: 4px; font-size: 0.8rem; color: #333; cursor: pointer; min-width: 80px;"
+                                onfocus="this.style.background='white'" 
+                                onblur="this.style.background='${statusColors[item.status]}'">
+                          <option value="pending" ${item.status === 'pending' ? 'selected' : ''}>대기중</option>
+                          <option value="in_progress" ${item.status === 'in_progress' ? 'selected' : ''}>진행중</option>
+                          <option value="completed" ${item.status === 'completed' ? 'selected' : ''}>완료</option>
+                          <option value="rejected" ${item.status === 'rejected' ? 'selected' : ''}>거부</option>
+                        </select>
                         <span style="padding: 0.25rem 0.5rem; background: ${priorityColors[item.priority]}; border-radius: 4px; font-size: 0.8rem; color: #333;">
                           ${priorityTexts[item.priority]}
                         </span>
@@ -1701,13 +1887,22 @@
                           ${categoryTexts[item.category]}
                         </span>
                       </div>
-                      <div>${new Date(item.created_at).toLocaleDateString('ko-KR')}</div>
+                      <div style="display: flex; gap: 1rem; align-items: center;">
+                        <span>${new Date(item.created_at).toLocaleDateString('ko-KR')}</span>
+                        <button onclick="confirmDeleteFeedback('${item.id}', '${item.title}')" 
+                                style="padding: 0.25rem 0.5rem; background: rgba(244, 67, 54, 0.2); border: none; border-radius: 4px; color: #d32f2f; cursor: pointer; font-size: 0.8rem; transition: background-color 0.2s;"
+                                onmouseover="this.style.background='rgba(244, 67, 54, 0.3)'" 
+                                onmouseout="this.style.background='rgba(244, 67, 54, 0.2)'"
+                                title="삭제">
+                          🗑️ 삭제
+                        </button>
+                      </div>
                     </div>
                   </div>
                 `;
               }).join('') : `
                 <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: #999; font-style: italic;">
-                  아직 개선요청이 없습니다. 첫 번째 요청을 작성해보세요!
+                  필터 조건에 맞는 개선요청이 없습니다.
                 </div>
               `}
             </div>
@@ -1760,46 +1955,23 @@
               </form>
             </div>
           </div>
-        `;
-      }
-      
-      // 개선요청 관련 함수들
-      function showAddFeedbackForm() {
-        document.getElementById('feedback-form-title').textContent = '개선요청 작성';
-        document.getElementById('feedback-form').reset();
-        document.getElementById('feedback-form-modal').style.display = 'block';
-      }
-      
-      function closeFeedbackForm() {
-        document.getElementById('feedback-form-modal').style.display = 'none';
-      }
-      
-      async function handleFeedbackSubmit(e) {
-        e.preventDefault();
-        
-        const formData = {
-          title: document.getElementById('feedback-title').value,
-          content: document.getElementById('feedback-content').value,
-          author_name: document.getElementById('feedback-author').value,
-          author_email: document.getElementById('feedback-email').value || null,
-          category: document.getElementById('feedback-category').value,
-          priority: document.getElementById('feedback-priority').value
-        };
-        
-        try {
-          const { error } = await supabase
-            .from('c_feedback')
-            .insert([formData]);
-            
-          if (error) throw error;
           
-          showSuccess('개선요청이 제출되었습니다.');
-          closeFeedbackForm();
-          loadData();
-        } catch (error) {
-          console.error('개선요청 제출 오류:', error);
-          showError('제출 중 오류가 발생했습니다: ' + error.message);
-        }
+          <!-- 삭제 확인 모달 -->
+          <div id="delete-feedback-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; color: black; padding: 2rem; border-radius: 8px; max-width: 500px; width: 90%;">
+              <h3 style="margin: 0 0 1rem 0; color: #d32f2f;">🗑️ 개선요청 삭제</h3>
+              <p style="margin: 0 0 1.5rem 0; color: #666; line-height: 1.5;">
+                정말로 이 개선요청을 삭제하시겠습니까?<br>
+                <strong id="delete-feedback-title" style="color: #333;"></strong><br>
+                <small style="color: #999;">이 작업은 되돌릴 수 없습니다.</small>
+              </p>
+              <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                <button onclick="deleteFeedback()" class="btn" style="flex: 1; background: #d32f2f; color: white; border: none; padding: 0.75rem 1rem; border-radius: 4px; cursor: pointer; font-weight: bold;">삭제</button>
+                <button onclick="closeDeleteFeedbackModal()" class="btn" style="flex: 1; background: #6c757d; color: white; border: none; padding: 0.75rem 1rem; border-radius: 4px; cursor: pointer;">취소</button>
+              </div>
+            </div>
+          </div>
+        `;
       }
     </script>
   </body>
