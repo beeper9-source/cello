@@ -970,8 +970,10 @@
       }
 
       function generatePracticeCalendar() {
-        const year = parseInt(document.getElementById('practice-year')?.value || new Date().getFullYear());
-        const month = parseInt(document.getElementById('practice-month')?.value || (new Date().getMonth() + 1));
+        const now = new Date();
+        const todayStr = now.toISOString().slice(0, 10);
+        const year = parseInt(document.getElementById('practice-year')?.value || now.getFullYear());
+        const month = parseInt(document.getElementById('practice-month')?.value || (now.getMonth() + 1));
         const selectedPlayerId = document.getElementById('practice-player-filter')?.value || '';
         
         // 해당 월의 모든 연습 기록 가져오기
@@ -1012,7 +1014,8 @@
             records: dayRecords,
             weekday: weekday,
             isHoliday: isHolidayDay,
-            isWeekend: isWeekendDay
+            isWeekend: isWeekendDay,
+            isToday: dateStr === todayStr
           });
         }
         
@@ -1027,8 +1030,13 @@
           
           <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem;">
             ${calendarDays.map(dayData => `
-              <div class="card" style="min-height: 200px;">
-                <h4 style="margin-bottom: 1rem; color: ${dayData.isHoliday || dayData.isWeekend ? '#ff4757' : '#667eea'}; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 0.5rem;">
+              <div class="card" style="min-height: 200px; position: relative; ${dayData.isToday ? 'border: 2px solid #ff9f43; box-shadow: 0 8px 24px rgba(255,159,67,0.35), inset 0 0 0 1px rgba(255,255,255,0.08); background: linear-gradient(135deg, rgba(255,159,67,0.12), rgba(255,159,67,0.05));' : ''}">
+                ${dayData.isToday ? `
+                  <div style="position: absolute; top: 10px; right: -10px; background: #ff9f43; color: #1b1f24; padding: 4px 10px; font-weight: 700; font-size: 0.75rem; border-radius: 4px; transform: rotate(3deg); box-shadow: 0 4px 10px rgba(255,159,67,0.4);">
+                    오늘
+                  </div>
+                ` : ''}
+                <h4 style="margin-bottom: 1rem; color: ${dayData.isToday ? '#ff9f43' : (dayData.isHoliday || dayData.isWeekend ? '#ff4757' : '#667eea')}; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 0.5rem;">
                   ${dayData.day}일 (${dayData.weekday}) ${dayData.isHoliday ? '🏮' : ''} ${dayData.isWeekend && !dayData.isHoliday ? '📅' : ''} (${dayData.records.length}개)
                 </h4>
                 
@@ -1064,7 +1072,7 @@
                                     style="padding: 0.25rem 0.5rem; background: ${record.practiced ? 'rgba(0, 255, 0, 0.3)' : 'rgba(255, 255, 255, 0.1)'}; font-size: 0.8rem;">
                               ${record.practiced ? '✅' : '⭕'}
                             </button>
-                            <button onclick="startRecording('${record.id || ''}', '${player.nickname || ''}', '${song.title || ''}', '${player.id || ''}', '${song.id || ''}', '${dayData.dateStr || ''}')" 
+                            <button onclick="startRecording('${record.id || ''}', '${player.nickname || ''}', '${song.title || ''}', '${player.id || ''}', '${song.id || ''}', '${dayData.dateStr || ''}', event)" 
                                     class="btn" 
                                     style="padding: 0.25rem 0.5rem; background: rgba(255, 107, 107, 0.3); font-size: 0.8rem; color: white;">
                               🎤
@@ -1088,6 +1096,11 @@
                       </button>
                     </div>
                   </div>
+                  ${dayData.isToday ? `
+                    <div style="margin-top: 0.75rem;">
+                      <img src="today.JPG" alt="today" style="display:block; width: 100%; height: auto; border-radius: 6px; box-shadow: 0 4px 14px rgba(0,0,0,0.25);" />
+                    </div>
+                  ` : ''}
                 ` : `
                   <div style="padding: 1rem;">
                     <div style="text-align: center; margin-bottom: 1rem; opacity: 0.5;">
@@ -1177,7 +1190,7 @@
           
           <!-- 녹음 모달 -->
           <div id="recording-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
-            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; color: black; padding: 2rem; border-radius: 8px; max-width: 500px; width: 90%; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+            <div id="recording-modal-content" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; color: black; padding: 2rem; border-radius: 8px; max-width: 500px; width: 90%; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
               <h3 id="recording-title">🎤 녹음하기</h3>
               <p id="recording-info" style="margin: 1rem 0; color: #666;"></p>
               
@@ -1493,6 +1506,14 @@
       
       // 연습 체크 함수들
       async function togglePractice(playerId, songId, date, practiced) {
+        // 오늘 날짜만 허용
+        try {
+          const todayStr = new Date().toISOString().slice(0, 10);
+          if (date !== todayStr) {
+            showError('오늘 날짜에만 결과를 기록할 수 있습니다.');
+            return;
+          }
+        } catch (_) {}
         try {
           // 기존 기록 확인
           const { data: existingRecord } = await supabase
@@ -1682,6 +1703,15 @@
         
         console.log('폼 데이터:', formData);
         
+        // 오늘 날짜만 허용
+        try {
+          const todayStr = new Date().toISOString().slice(0, 10);
+          if (formData.practice_date !== todayStr) {
+            showError('오늘 날짜에만 결과를 기록할 수 있습니다.');
+            return;
+          }
+        } catch (_) {}
+        
         // 필수 필드 검증
         if (!formData.player_id || !formData.song_id || !formData.practice_date) {
           showError('연주자, 곡, 날짜를 모두 선택해주세요.');
@@ -1711,6 +1741,14 @@
       
       // 빠른 연습 추가 함수
       async function quickAddPractice(playerId, songId, dateStr) {
+        // 오늘 날짜만 허용
+        try {
+          const todayStr = new Date().toISOString().slice(0, 10);
+          if (dateStr !== todayStr) {
+            showError('오늘 날짜에만 결과를 기록할 수 있습니다.');
+            return;
+          }
+        } catch (_) {}
         try {
           const { error } = await supabase
             .from('c_practice_records')
@@ -1839,8 +1877,8 @@
       let recordingTimer = null;
       let recordedAudioBlob = null;
       
-      function startRecording(recordId, playerName, songTitle, playerId, songId, practiceDate) {
-        console.log('startRecording 호출됨:', { recordId, playerName, songTitle, playerId, songId, practiceDate });
+      function startRecording(recordId, playerName, songTitle, playerId, songId, practiceDate, ev) {
+        console.log('startRecording 호출됨:', { recordId, playerName, songTitle, playerId, songId, practiceDate, ev });
         
         // 파라미터 정리 (빈 문자열을 null로 변환)
         const cleanRecordId = recordId && recordId !== '' ? recordId : null;
@@ -1889,6 +1927,51 @@
         info.textContent = `${cleanPlayerName} - ${cleanSongTitle}`;
         
         modal.style.display = 'block';
+        // 클릭 위치 기준으로 모달 위치 조정
+        try {
+          const content = document.getElementById('recording-modal-content');
+          if (content) {
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+
+            // 기본 중앙 위치
+            let targetLeft = viewportWidth / 2;
+            let targetTop = viewportHeight / 2;
+
+            if (ev && ev.clientX != null && ev.clientY != null) {
+              // 클릭 위치 기준
+              targetLeft = ev.clientX;
+              targetTop = ev.clientY;
+            }
+
+            // 콘텐츠 크기를 측정하기 위해 잠시 기본 transform 제거
+            const prevTransform = content.style.transform;
+            content.style.transform = 'translate(0, 0)';
+            const rect = content.getBoundingClientRect();
+
+            // 좌상단 좌표 계산 (클릭 지점을 콘텐츠 중앙으로 맞추기)
+            let left = targetLeft - rect.width / 2;
+            let top = targetTop - rect.height / 2;
+
+            // 화면 경계 보정 (10px 패딩)
+            const padding = 10;
+            left = Math.max(padding, Math.min(left, viewportWidth - rect.width - padding));
+            top = Math.max(padding, Math.min(top, viewportHeight - rect.height - padding));
+
+            // 위치 적용 및 transform 복원 없이 translate(0,0) 유지
+            content.style.left = left + 'px';
+            content.style.top = top + 'px';
+            content.style.transform = 'translate(0, 0)';
+
+            // 키보드 포커스 이동
+            const startBtn = document.getElementById('start-recording-btn');
+            if (startBtn) startBtn.focus();
+
+            // 이전 transform 값 미사용
+          }
+        } catch (posErr) {
+          console.warn('모달 위치 조정 중 오류:', posErr);
+        }
         
         // 녹음 상태 초기화 (데이터는 유지)
         resetRecordingStateButKeepData();
@@ -2106,6 +2189,14 @@
         console.log('- songTitle:', currentRecordingData.songTitle);
         
         try {
+          // 오늘 날짜만 허용
+          try {
+            const todayStr = new Date().toISOString().slice(0, 10);
+            if (currentRecordingData && currentRecordingData.practiceDate !== todayStr) {
+              showError('오늘 날짜에만 결과를 기록할 수 있습니다.');
+              return;
+            }
+          } catch (_) {}
           // 파일명 생성 (날짜_시간.webm)
           const now = new Date();
           const timestamp = now.toISOString().replace(/[:.]/g, '-');
