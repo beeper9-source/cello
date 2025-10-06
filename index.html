@@ -1020,7 +1020,17 @@
         }
         
         const selectedPlayer = selectedPlayerId ? players.find(p => p.id === selectedPlayerId) : null;
-        
+
+        // 오늘을 맨 앞으로, 그 다음 1일부터 말일까지 오름차순 정렬
+        let orderedDays = calendarDays.slice();
+        const todayIdx = orderedDays.findIndex(d => d.isToday);
+        if (todayIdx !== -1) {
+          const todayDay = orderedDays[todayIdx];
+          const others = orderedDays.filter((_, i) => i !== todayIdx);
+          others.sort((a, b) => a.dateStr.localeCompare(b.dateStr));
+          orderedDays = [todayDay, ...others];
+        }
+
         return `
           <div class="card" style="margin-bottom: 1rem;">
             <h3>📅 ${year}년 ${month}월 연습 기록</h3>
@@ -1029,8 +1039,8 @@
           </div>
           
           <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem;">
-            ${calendarDays.map(dayData => `
-              <div class="card" style="min-height: 200px; position: relative; ${dayData.isToday ? 'border: 2px solid #ff9f43; box-shadow: 0 8px 24px rgba(255,159,67,0.35), inset 0 0 0 1px rgba(255,255,255,0.08); background: linear-gradient(135deg, rgba(255,159,67,0.12), rgba(255,159,67,0.05));' : ''}">
+            ${orderedDays.map(dayData => `
+              <div class="card day-card" data-date="${dayData.dateStr}" style="min-height: 200px; position: relative; ${dayData.isToday ? 'border: 2px solid #ff9f43; box-shadow: 0 8px 24px rgba(255,159,67,0.35), inset 0 0 0 1px rgba(255,255,255,0.08); background: linear-gradient(135deg, rgba(255,159,67,0.12), rgba(255,159,67,0.05));' : ''}">
                 ${dayData.isToday ? `
                   <div style="position: absolute; top: 10px; right: -10px; background: #ff9f43; color: #1b1f24; padding: 4px 10px; font-weight: 700; font-size: 0.75rem; border-radius: 4px; transform: rotate(3deg); box-shadow: 0 4px 10px rgba(255,159,67,0.4);">
                     오늘
@@ -1057,11 +1067,10 @@
                             ${notes ? `<div style="opacity: 0.6; font-size: 0.7rem; margin-top: 0.25rem;">📝 ${notes}</div>` : ''}
                             ${record.recording_url ? `
                               <div style="margin-top: 0.5rem;">
-                                <audio controls style="width: 100%; height: 30px; background: rgba(255,255,255,0.1);">
-                                  <source src="${record.recording_url}" type="audio/webm">
-                                  <source src="${record.recording_url}" type="audio/mp4">
-                                  브라우저에서 오디오를 지원하지 않습니다.
-                                </audio>
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                  <audio class="with-duration" preload="metadata" controls src="${record.recording_url}" style="height: 30px; background: rgba(255,255,255,0.1);"></audio>
+                                  <span class="audio-duration" style="font-size: 0.85rem; opacity: 0.8; min-width: 42px; text-align: right;">--:--</span>
+                                </div>
                                 <div style="font-size: 0.7rem; opacity: 0.7; margin-top: 0.25rem;">🎤 녹음 파일</div>
                               </div>
                             ` : ''}
@@ -1217,7 +1226,10 @@
               
               <div id="recording-preview" style="margin-top: 2rem; display: none;">
                 <p style="margin-bottom: 1rem;">녹음 미리듣기:</p>
-                <audio id="audio-preview" controls style="width: 100%; margin-bottom: 1rem;"></audio>
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+                  <audio id="audio-preview" class="with-duration" preload="metadata" controls style="background: rgba(255,255,255,0.1);"></audio>
+                  <span id="audio-preview-duration" class="audio-duration" style="font-size: 0.9rem; opacity: 0.8; min-width: 42px; text-align: right;">--:--</span>
+                </div>
                 <div style="display: flex; gap: 1rem; justify-content: center;">
                   <button onclick="saveRecording()" class="btn" style="background: #27ae60; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; cursor: pointer; opacity: 0.5;" disabled>
                     💾 저장하기
@@ -1308,6 +1320,15 @@
             }
           });
         }
+
+        // 렌더 후 오디오 길이 라벨 업데이트
+        try {
+          updateAllAudioDurations();
+        } catch (_) {}
+        // 렌더 직후 재확인 (비동기 소스 설정 지연 대비)
+        setTimeout(() => {
+          try { updateAllAudioDurations(); } catch (_) {}
+        }, 500);
         
         // 연습 추가 폼이 있는지 확인
         const addPracticeForm = document.getElementById('add-practice-form');
@@ -1954,47 +1975,63 @@
         info.textContent = `${cleanPlayerName} - ${cleanSongTitle}`;
         
         modal.style.display = 'block';
-        // 클릭 위치 기준으로 모달 위치 조정
+        // 오늘 날짜 카드 위로 모달 위치 조정 (우선), 실패 시 클릭 위치/중앙 기준으로 배치
         try {
           const content = document.getElementById('recording-modal-content');
           if (content) {
-            const viewportWidth = window.innerWidth;
-            const viewportHeight = window.innerHeight;
+            // 1) 오늘 날짜 카드 기준 배치 시도
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            const todayStr = `${yyyy}-${mm}-${dd}`;
+            const todayCard = document.querySelector(`.day-card[data-date="${todayStr}"]`);
 
-            // 기본 중앙 위치
-            let targetLeft = viewportWidth / 2;
-            let targetTop = viewportHeight / 2;
+            // 측정 위해 기본 transform 제거
+            content.style.transform = 'translate(0, 0)';
 
-            if (ev && ev.clientX != null && ev.clientY != null) {
-              // 클릭 위치 기준
-              targetLeft = ev.clientX;
-              targetTop = ev.clientY;
+            if (todayCard) {
+              const rect = todayCard.getBoundingClientRect();
+              const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+              const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+              const desiredTop = rect.top + scrollTop + 8; // 카드 아래 약간 여백
+              const desiredLeft = rect.left + scrollLeft + rect.width / 2;
+
+              content.style.top = desiredTop + 'px';
+              content.style.left = desiredLeft + 'px';
+              content.style.transform = 'translate(-50%, 0)';
+
+              // 뷰포트 하단 넘어가면 위로 붙이기
+              const cRect = content.getBoundingClientRect();
+              if (cRect.bottom > window.innerHeight) {
+                const topAdjusted = rect.top + scrollTop - cRect.height - 8;
+                content.style.top = Math.max(8, topAdjusted) + 'px';
+                content.style.transform = 'translate(-50%, 0)';
+              }
+            } else {
+              // 2) 클릭 위치 기준 또는 3) 중앙 기준
+              const viewportWidth = window.innerWidth;
+              const viewportHeight = window.innerHeight;
+              let targetLeft = viewportWidth / 2;
+              let targetTop = viewportHeight / 2;
+              if (ev && ev.clientX != null && ev.clientY != null) {
+                targetLeft = ev.clientX;
+                targetTop = ev.clientY;
+              }
+              const rect = content.getBoundingClientRect();
+              const padding = 10;
+              let left = targetLeft - rect.width / 2;
+              let top = targetTop - rect.height / 2;
+              left = Math.max(padding, Math.min(left, viewportWidth - rect.width - padding));
+              top = Math.max(padding, Math.min(top, viewportHeight - rect.height - padding));
+              content.style.left = left + 'px';
+              content.style.top = top + 'px';
+              content.style.transform = 'translate(0, 0)';
             }
 
-            // 콘텐츠 크기를 측정하기 위해 잠시 기본 transform 제거
-            const prevTransform = content.style.transform;
-            content.style.transform = 'translate(0, 0)';
-            const rect = content.getBoundingClientRect();
-
-            // 좌상단 좌표 계산 (클릭 지점을 콘텐츠 중앙으로 맞추기)
-            let left = targetLeft - rect.width / 2;
-            let top = targetTop - rect.height / 2;
-
-            // 화면 경계 보정 (10px 패딩)
-            const padding = 10;
-            left = Math.max(padding, Math.min(left, viewportWidth - rect.width - padding));
-            top = Math.max(padding, Math.min(top, viewportHeight - rect.height - padding));
-
-            // 위치 적용 및 transform 복원 없이 translate(0,0) 유지
-            content.style.left = left + 'px';
-            content.style.top = top + 'px';
-            content.style.transform = 'translate(0, 0)';
-
-            // 키보드 포커스 이동
+            // 포커스 이동
             const startBtn = document.getElementById('start-recording-btn');
             if (startBtn) startBtn.focus();
-
-            // 이전 transform 값 미사용
           }
         } catch (posErr) {
           console.warn('모달 위치 조정 중 오류:', posErr);
@@ -2157,12 +2194,62 @@
             `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         }
       }
+
+      // 오디오 길이 포맷터 (분:초)
+      function formatDurationMmSs(secondsTotal) {
+        if (!isFinite(secondsTotal) || secondsTotal < 0) return '--:--';
+        const total = Math.floor(secondsTotal);
+        const mm = Math.floor(total / 60).toString().padStart(2, '0');
+        const ss = (total % 60).toString().padStart(2, '0');
+        return `${mm}:${ss}`;
+      }
+
+      // 페이지 내 모든 오디오의 길이를 우측 라벨에 표시
+      function updateAllAudioDurations() {
+        const audioEls = document.querySelectorAll('audio.with-duration');
+        audioEls.forEach(audio => {
+          const durationLabel = audio.parentElement?.querySelector('.audio-duration');
+          if (!durationLabel) return;
+
+          const apply = () => {
+            const dur = audio.duration;
+            if (isFinite(dur) && dur > 0) {
+              durationLabel.textContent = formatDurationMmSs(dur);
+            }
+          };
+
+          // 메타데이터 로딩을 강제 시작 (source 자식 사용 시 필요)
+          try { audio.load(); } catch (_) {}
+
+          if (audio.readyState >= 1 && isFinite(audio.duration) && audio.duration > 0) {
+            apply();
+          } else {
+            audio.addEventListener('loadedmetadata', apply, { once: true });
+            audio.addEventListener('durationchange', apply);
+            // 짧은 지연 후 한 번 더 시도 (네트워크/디코딩 지연 대비)
+            setTimeout(apply, 800);
+          }
+        });
+      }
       
       function showRecordingPreview() {
         if (recordedAudioBlob) {
           const audioUrl = URL.createObjectURL(recordedAudioBlob);
           const audioPreview = document.getElementById('audio-preview');
           audioPreview.src = audioUrl;
+          try { audioPreview.load(); } catch (_) {}
+          // 미리듣기 길이 라벨 업데이트
+          const previewApply = () => {
+            const label = document.getElementById('audio-preview-duration');
+            if (label) label.textContent = formatDurationMmSs(audioPreview.duration);
+          };
+          if (audioPreview.readyState >= 1 && isFinite(audioPreview.duration) && audioPreview.duration > 0) {
+            previewApply();
+          } else {
+            audioPreview.addEventListener('loadedmetadata', previewApply, { once: true });
+            audioPreview.addEventListener('durationchange', previewApply);
+            setTimeout(previewApply, 800);
+          }
           
           document.getElementById('recording-preview').style.display = 'block';
           document.getElementById('recording-status').textContent = '녹음 완료';
